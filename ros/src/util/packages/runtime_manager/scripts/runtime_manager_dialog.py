@@ -574,9 +574,9 @@ class MyFrame(rtmgr.MyFrame):
 					restore = eval( gdic.get(name, {}).get('restore', 'lambda a : None') )
 					restore(v)
 
-				self.add_cfg_info(obj, obj, k, pdic, gdic, False, prm)
+				self.add_cfg_info(obj, obj, k, pdic, gdic, prm)
 			else:
-				self.add_cfg_info(obj, obj, k, None, gdic, False, None)
+				self.add_cfg_info(obj, obj, k, None, gdic, None)
 
 	#def OnDrive(self, event):
 	#	obj = event.GetEventObject()
@@ -1175,7 +1175,7 @@ class MyFrame(rtmgr.MyFrame):
 				obj = self.add_config_link(dic, panel, obj)
 			else:
 				gdic = self.gdic_get_1st(dic)
-				self.add_cfg_info(obj, obj, dic.get('name'), None, gdic, False, None)
+				self.add_cfg_info(obj, obj, dic.get('name'), None, gdic, None)
 		if sizer is not None:
 			sizer.append((obj, bdr_flg))
 		else:
@@ -1192,7 +1192,7 @@ class MyFrame(rtmgr.MyFrame):
 		gdic = self.gdic_get_1st(dic)
 		dic_getset(gdic, 'def_link', '[config]')
 		prm = self.get_param(dic.get('param'))
-		self.add_cfg_info(cfg_obj, obj, name, pdic, gdic, True, prm)
+		self.add_cfg_info(cfg_obj, obj, name, pdic, gdic, prm)
 		return hszr
 
 	def camera_ids(self):
@@ -1252,7 +1252,7 @@ class MyFrame(rtmgr.MyFrame):
 
 			cam_id_obj = self.cam_id_to_obj(cam_id, obj.GetValue())
 			if not pdic_a or not gdic_a:
-				self.add_cfg_info(cam_id_obj, cam_id_obj, cam_id, pdic, gdic, False, prm)
+				self.add_cfg_info(cam_id_obj, cam_id_obj, cam_id, pdic, gdic, prm)
 			if not cam_id_obj in cmd_dic:
 				cmd_dic[ cam_id_obj ] = (cmd, None)
 
@@ -1785,9 +1785,8 @@ class MyFrame(rtmgr.MyFrame):
 		gdic['update_func'] = self.update_func
 		return gdic
 
-	def add_cfg_info(self, cfg_obj, obj, name, pdic, gdic, run_disable, prm):
-		self.config_dic[ cfg_obj ] = { 'obj':obj , 'name':name , 'pdic':pdic , 'gdic':gdic, 
-					       'run_disable':run_disable , 'param':prm }
+	def add_cfg_info(self, cfg_obj, obj, name, pdic, gdic, prm):
+		self.config_dic[ cfg_obj ] = { 'obj':obj , 'name':name , 'pdic':pdic , 'gdic':gdic, 'param':prm }
 
 	def get_param(self, prm_name):
 		return next( (prm for prm in self.params if prm['name'] == prm_name), None)
@@ -2059,7 +2058,7 @@ class MyFrame(rtmgr.MyFrame):
 					for link in dic_getset(gdic, 'links', [ def_link ]):
 						self.new_link(item, name, pdic, gdic, pnl, link, items.get('param'), add_objs)
 				else:
-					self.add_cfg_info(item, item, name, None, gdic, False, None)
+					self.add_cfg_info(item, item, name, None, gdic, None)
 				szr = sizer_wrap(add_objs, wx.HORIZONTAL, parent=pnl)
 				szr.Fit(pnl)
 				tree.SetItemWindow(item, pnl)
@@ -2078,7 +2077,7 @@ class MyFrame(rtmgr.MyFrame):
 				add_objs += [ wx.StaticText(pnl, wx.ID_ANY, ' ') ]
 			add_objs += [ wx.StaticText(pnl, wx.ID_ANY, '['), lkc, wx.StaticText(pnl, wx.ID_ANY, ']') ]
 		prm = self.get_param(prm_name)
-		self.add_cfg_info(lkc if lkc else item, item, name, pdic, gdic, False, prm)
+		self.add_cfg_info(lkc if lkc else item, item, name, pdic, gdic, prm)
 
 	def load_dic_pdic_setup(self, name, dic):
 		name = dic.get('share_val', dic.get('name', name))
