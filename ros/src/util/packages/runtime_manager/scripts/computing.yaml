@@ -564,6 +564,11 @@ params :
       v        : 20
 
   - name  : dpm_ocv
+    topics:
+    - topic : /config/car_dpm
+      msg   : ConfigCarDpm
+    - topic : /config/pedestrian_dpm
+      msg   : ConfigPedestrianDpm
     vars  :
     - name     : use_gpu
       desc     : use_gpu desc sample
@@ -708,6 +713,11 @@ params :
       in_msg: num_bins
 
   - name  : dpm_ttic
+    topics:
+    - topic : /config/car_dpm
+      msg   : ConfigCarDpm
+    - topic : /config/pedestrian_dpm
+      msg   : ConfigPedestrianDpm
     vars  :
     - name     : use_gpu
       desc     : use_gpu desc sample

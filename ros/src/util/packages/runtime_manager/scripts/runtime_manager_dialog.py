@@ -902,7 +902,7 @@ class MyFrame(rtmgr.MyFrame):
 				if hook:
 					hook(hook_var.get('args', {}))
 
-		if 'pub' in prm:
+		if 'topics' in prm:
 			self.publish_param_topic(pdic, prm)
 		self.rosparam_set(pdic, prm)
 		self.update_depend_enable(pdic, gdic, prm)
@@ -974,23 +974,26 @@ class MyFrame(rtmgr.MyFrame):
 			enables_set(vp, 'depend', v)
 
 	def publish_param_topic(self, pdic, prm):
-		pub = prm['pub']
-		klass_msg = globals()[ prm['msg'] ]
-		msg = klass_msg()
+		for d in prm.get('topics'):
+			msg = d.get('klass_msg')()
+			topic = d.get('topic')
+			for (name, v) in pdic.items():
+				var = self.get_var(prm, name, {})
+				if var.get('topic', topic) != topic:
+					continue
+				name = var.get('in_msg', name)
+				if topic == '/twist_cmd' and name == 'twist.angular.z':
+					v = -v
+				(obj, attr) = msg_path_to_obj_attr(msg, name)
+				if obj and attr in obj.__slots__:
+					type_str = obj._slot_types[ obj.__slots__.index(attr) ]
+					setattr(obj, attr, str_to_rosval(v, type_str, v))
 
-		for (name, v) in pdic.items():
-			if prm.get('topic') == '/twist_cmd' and name == 'twist.angular.z':
-				v = -v
-			(obj, attr) = msg_path_to_obj_attr(msg, name)
-			if obj and attr in obj.__slots__:
-				type_str = obj._slot_types[ obj.__slots__.index(attr) ]
-				setattr(obj, attr, str_to_rosval(v, type_str, v))
-		
-		if 'stamp' in prm.get('flags', []):
-			(obj, attr) = msg_path_to_obj_attr(msg, 'header.stamp')
-			setattr(obj, attr, rospy.get_rostime())
+			if 'stamp' in prm.get('flags', []):
+				(obj, attr) = msg_path_to_obj_attr(msg, 'header.stamp')
+				setattr(obj, attr, rospy.get_rostime())
 
-		pub.publish(msg)
+			d.get('pub').publish(msg)
 
 	def rosparam_set(self, pdic, prm):
 		rosparams = None
@@ -1740,9 +1743,11 @@ class MyFrame(rtmgr.MyFrame):
 
 	def add_params(self, params):
 		for prm in params:
-			if 'topic' in prm and 'msg' in prm:
-				klass_msg = globals()[ prm['msg'] ]
-				prm['pub'] = rospy.Publisher(prm['topic'], klass_msg, latch=True, queue_size=10)
+			if 'topics' not in prm and 'topic' in prm and 'msg' in prm:
+				prm['topics'] = [ { 'topic':prm.get('topic'), 'msg':prm.get('msg') } ]
+			for d in prm.get('topics', []):
+				d['klass_msg'] = globals()[ d.get('msg') ]
+				d['pub'] = rospy.Publisher(d.get('topic'), d.get('klass_msg'), latch=True, queue_size=10)
 		self.params += params
 
 	def gdic_get_1st(self, dic):
