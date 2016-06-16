@@ -1157,7 +1157,7 @@ class MyFrame(rtmgr.MyFrame):
 		name = dic['name']
 		pdic = self.load_dic_pdic_setup(name, dic)
 		gdic = self.gdic_get_1st(dic)
-		dic_getset(gdic, 'def_link', 'config')
+		dic_getset(gdic, 'def_link', '[config]')
 		prm = self.get_param(dic.get('param'))
 		self.add_cfg_info(cfg_obj, obj, name, pdic, gdic, True, prm)
 		return hszr
