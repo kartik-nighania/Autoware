@@ -291,10 +291,10 @@ class MyFrame(rtmgr.MyFrame):
 
 		szr = wx.BoxSizer(wx.VERTICAL)
 		for cc in self.interface_dic.get('control_check', []):
-			pdic = {}
+			pdic = Pdic(self)
 			prm = self.get_param(cc.get('param'))
 			for var in prm['vars']:
-				pdic[ var['name'] ] = var['v']
+				pdic.set(var['name'], var['v'])
 			gdic = self.gdic_get_1st(cc)
 			panel = ParamPanel(self.panel_interface_cc, frame=self, pdic=pdic, gdic=gdic, prm=prm)
 			szr.Add(panel, 0, wx.EXPAND)
@@ -563,8 +563,8 @@ class MyFrame(rtmgr.MyFrame):
 				prm = self.get_param(d2.get('param'))
 				for var in prm.get('vars'):
 					name = var.get('name')
-					if name not in pdic and 'v' in var:
-						pdic[name] = var.get('v')
+					if not pdic.has(name):
+						pdic.set(name, var.get('v'))
 
 				for (name, v) in pdic.items():
 					restore = eval( gdic.get(name, {}).get('restore', 'lambda a : None') )
@@ -880,17 +880,16 @@ class MyFrame(rtmgr.MyFrame):
 		return ( d.get('pdic'), d.get('gdic'), d.get('param') )
 
 	def update_func(self, pdic, gdic, prm):
-		pdic_empty = (pdic == {})
 		for var in prm.get('vars', []):
 			name = var.get('name')
 			gdic_v = gdic.get(name, {})
 			func = gdic_v.get('func')
-			if func is None and not pdic_empty:
+			if func is None and not pdic.is_empty():
 				continue
 			v = var.get('v')
 			if func is not None:
 				v = eval(func) if type(func) is str else func()
-			pdic[ name ] = v
+			pdic.set(name, v)
 
 			hook = gdic_v.get('update_hook')
 			if hook:
@@ -999,7 +998,7 @@ class MyFrame(rtmgr.MyFrame):
 		rosparams = None
 		for var in prm.get('vars', []):
 			name = var['name']
-			if 'rosparam' not in var or name not in pdic:
+			if 'rosparam' not in var or not pdic.has(name):
 				continue
 			rosparam = var['rosparam']
 			v = pdic.get(name)
@@ -2052,7 +2051,9 @@ class MyFrame(rtmgr.MyFrame):
 
 	def load_dic_pdic_setup(self, name, dic):
 		name = dic.get('share_val', dic.get('name', name))
-		pdic = self.load_dic.get(name, {})
+		pdic_dic = self.load_dic.get(name, {})
+		share = dic.get('share', {})
+		pdic = Pdic(self, pdic_dic, share)
 		self.load_dic[ name ] = pdic
 		return pdic
 
@@ -3023,6 +3024,57 @@ class StrValObj:
 		self.v = v
 	def GetValue(self):
 		return self.v
+
+class Pdic:
+	def __init__(self, frame, dic={}, share={}):
+		self.frame = frame
+		self.dic = dic
+		self.share = share
+		self.to_pdic = {}
+
+	def share_get(self, name):
+		if name not in self.share:
+			return False
+		if name not in self.to_pdic:
+			to_nm = self.share.get(name)
+			to_p = self.frame.cfg_dic( {'name':to_nm} ).get('pdic')
+			if to_p is None:
+				print 'not found share pdic {}'.format(to_nm)
+				return None
+			self.to_pdic[name] = to_p
+		return self.to_pdic.get(name)
+
+	def get(self, name, def_ret=None):
+		to_p = self.share_get(name)
+		if to_p:
+			return to_p.get(name, def_ret)
+		return self.dic.get(name, def_ret) if to_p is False else def_ret
+
+	def set(self, name, v):
+		to_p = self.share_get(name)
+		if to_p:
+			to_p.set(name, v)
+		if to_p is False:
+			self.dic[name] = v
+
+	def has(self, name):
+		to_p = self.share_get(name)
+		if to_p:
+			return to_p.has(name)
+		return name in self.dic
+
+	def items(self):
+		return [ (name, self.get(name)) for name in self.dic.keys() + self.share.keys() ]
+
+	def is_empty(self):
+		return self.dic == {} and not any([ self.has(name) for name in self.share.keys() ])
+
+	def copy(self):
+		return dict(self.items())
+
+	def update(self, dic):
+		for (k,v) in dic.items():
+			self.set(k, v)
 
 class MyApp(wx.App):
 	def OnInit(self):

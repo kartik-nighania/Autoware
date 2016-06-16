@@ -101,6 +101,17 @@ subs :
         desc : dpm_ttic desc sample
         cmd  : roslaunch cv_tracker dpm_ttic.launch
         param: dpm_ttic
+        share:
+          score_threshold            : dpm_ocv
+          group_threshold            : dpm_ocv
+          Lambda                     : dpm_ocv
+          num_cells                  : dpm_ocv
+          num_bins                   : dpm_ocv
+          pedestrian_score_threshold : dpm_ocv
+          pedestrian_group_threshold : dpm_ocv
+          pedestrian_Lambda          : dpm_ocv
+          pedestrian_num_cells       : dpm_ocv
+          pedestrian_num_bins        : dpm_ocv
         gui  :
           links : [ app, car, pedestrian ]
           flags : [ need_camera_info ]
