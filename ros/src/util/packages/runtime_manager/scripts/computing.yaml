@@ -1833,6 +1833,7 @@ params :
       max       : 200
       v         : 40.0
       rosparam  : /waypoint_clicker/velocity
+      static    : True
     - name      : output_file
       desc      : output_file desc sample
       label     : Output File
@@ -1840,6 +1841,7 @@ params :
       path_type : save
       v         : /tmp/lane_waypoint.csv
       rosparam  : /waypoint_clicker/output_file
+      static    : True
         
   - name  : waypoint_loader
     vars  :

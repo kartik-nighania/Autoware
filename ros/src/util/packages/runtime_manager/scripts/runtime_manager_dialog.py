@@ -858,15 +858,16 @@ class MyFrame(rtmgr.MyFrame):
 		(_, gdic, _) = self.obj_to_pdic_gdic_prm(obj) if obj else (None, None, None)
 		return gdic if gdic else def_ret
 
-	def cfg_obj_dic(self, arg_dic, sys=False, def_ret=(None,{})):
+	def cfg_obj_dic(self, arg_dic, sys=False, cfg_label=None, def_ret=(None,{})):
 		sys_prm = self.get_param('sys')
 		prm_chk = {
 			True  : (lambda prm : prm is sys_prm),
 			False : (lambda prm : prm is not sys_prm),
 			None  : (lambda prm : True) }.get(sys)
 		arg_dic_chk = lambda dic: all( [ dic.get(k) == v for (k,v) in arg_dic.items() ] )
+		cfg_label_chk = lambda cfg_obj: (cfg_label is None) or ( hasattr(cfg_obj, 'GetLabel') and cfg_obj.GetLabel() == cfg_label )
 		return next( ( (cfg_obj, dic) for (cfg_obj, dic) in self.config_dic.items() \
-			       if arg_dic_chk(dic) and prm_chk(dic.get('param')) ), def_ret)
+			       if arg_dic_chk(dic) and prm_chk(dic.get('param')) and cfg_label_chk(cfg_obj) ), def_ret)
 
 	def cfg_dic(self, arg_dic, sys=False, def_ret={}):
 		(_, dic) = self.cfg_obj_dic(arg_dic, sys=sys, def_ret=(None, def_ret))
@@ -905,6 +906,7 @@ class MyFrame(rtmgr.MyFrame):
 			self.publish_param_topic(pdic, prm)
 		self.rosparam_set(pdic, prm)
 		self.update_depend_enable(pdic, gdic, prm)
+		self.setup_static(pdic, gdic, prm)
 
 		d = self.cfg_dic( {'pdic':pdic, 'gdic':gdic, 'param':prm}, sys=True )
 		self.update_proc_cpu(d.get('obj'), d.get('pdic'), d.get('param'))
@@ -1022,6 +1024,33 @@ class MyFrame(rtmgr.MyFrame):
 			cmd = [ 'rosparam', 'set', rosparam, v ] if v != '' else [ 'rosparam', 'delete', rosparam ]
 			print(cmd)
 			subprocess.call(cmd)
+
+	def setup_static(self, pdic, gdic, prm):
+		if lst_append_once(dic_getset(gdic, 'flags', []), 'done_setup_static'):
+			return
+		k = 'static'
+		msg_vars = []
+		for d in prm.get('topics', []):
+			msg = d.get('klass_msg')()
+			topic = d.get('topic')
+			for (name, v) in pdic.items():
+				var = self.get_var(prm, name, {})
+				if var.get('topic', topic) != topic:
+					continue
+				(obj, attr) = msg_path_to_obj_attr(msg, var.get('in_msg', name))
+				if obj and attr in obj.__slots__:
+					msg_vars.append(name)
+		is_not_sys = ( prm.get('name') != 'sys' )
+		for var in prm.get('vars', []):
+			if k not in var:
+				var[k] = var.get('name') not in msg_vars and 'rosparam' not in var and is_not_sys
+		def_link = gdic.get('def_link', 'app')
+		for link in gdic.get('links', [ def_link ]):
+			(cfg_obj, dic) = self.cfg_obj_dic( {'pdic':pdic, 'gdic':gdic, 'param':prm}, cfg_label=link )
+			if cfg_obj and cfg_obj is not dic.get('obj'):
+				if all([ var.get(k) for var in prm.get('vars', []) if var.get('link', def_link) == link ]):
+					lst = dic_getset(gdic, 'ext_toggle_enables', [])
+					lst_append_once(lst, cfg_obj)
 
 	def OnRefresh(self, event):
 		subprocess.call([ 'sh', '-c', 'echo y | rosnode cleanup' ])
@@ -1726,8 +1755,6 @@ class MyFrame(rtmgr.MyFrame):
 		(pdic, gdic, prm) = self.obj_to_pdic_gdic_prm(obj)
 		panel = ParamPanel(parent, frame=self, pdic=pdic, gdic=gdic, prm=prm)
 		sizer_wrap((panel,), wx.VERTICAL, 0, wx.EXPAND, 0, parent)
-		k = 'ext_toggle_enables'
-		gdic[ k ] = gdic.get(k, []) + [ panel ]
 
 	def obj_to_varpanel(self, obj, var_name):
 		gdic = self.obj_to_gdic(obj, {})
@@ -2023,9 +2050,9 @@ class MyFrame(rtmgr.MyFrame):
 				add_objs = []
 				self.new_link(item, name, pdic, self.sys_gdic, pnl, 'sys', 'sys', add_objs)
 				gdic = self.gdic_get_1st(items)
-				dic_getset(gdic, 'def_link', 'app')
+				def_link = dic_getset(gdic, 'def_link', 'app')
 				if 'param' in items:
-					for link in dic_getset(gdic, 'links', ['app']):
+					for link in dic_getset(gdic, 'links', [ def_link ]):
 						self.new_link(item, name, pdic, gdic, pnl, link, items.get('param'), add_objs)
 				else:
 					self.add_cfg_info(item, item, name, None, gdic, False, None)
@@ -2073,10 +2100,6 @@ class MyFrame(rtmgr.MyFrame):
 			set_val(obj, False)
 
 		proc = self.launch_kill(v, cmd, proc, add_args, obj=obj)
-
-		(cfg_obj, dic) = self.cfg_obj_dic( {'obj':obj} )
-		if cfg_obj and dic.get('run_disable'):
-			cfg_obj.Enable(not v)
 
 		cmd_dic[obj] = (cmd, proc)
 		if not v:
@@ -2365,6 +2388,8 @@ class ParamPanel(wx.Panel):
 			var_lst = lambda name, vars : [ var for var in vars if var.get('name') == name ]
 			vars = reduce( lambda lst, name : lst + var_lst(name, vars), self.gdic.get('show_order'), [] )
 
+		self.frame.setup_static(self.pdic, self.gdic, self.prm)
+
 		curr_link = self.gdic.get('curr_link')
 		def_link = self.gdic.get('def_link')
 
@@ -2437,9 +2462,9 @@ class ParamPanel(wx.Panel):
 			if 'hline' in gdic_v.get('flags', []) and hszr is None:
 				szr.Add(wx.StaticLine(self, wx.ID_ANY), 0, wx.EXPAND | wx.TOP | wx.BOTTOM, 4)
 
-			if not self.in_msg(var) and var.get('rosparam'):
-				k = 'ext_toggle_enables'
-				self.gdic[ k ] = self.gdic.get(k, []) + [ vp ]
+			if var.get('static', False):
+				lst = dic_getset(self.gdic, 'ext_toggle_enables', [])
+				lst_append_once(lst, vp)
 				enables_set(vp, 'toggle', proc is None)
 
 			if 'disable' in gdic_v.get('flags', []):
