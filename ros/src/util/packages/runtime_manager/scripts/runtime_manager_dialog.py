@@ -742,6 +742,7 @@ class MyFrame(rtmgr.MyFrame):
 		(pdic, gdic, prm) = self.obj_to_pdic_gdic_prm(obj)
 		if pdic is None or prm is None:
 			return
+		gdic['curr_link'] = obj.GetLabel() if hasattr(obj, 'GetLabel') else None
 		dic_list_push(gdic, 'dialog_type', 'config')
 		klass_dlg = globals().get(gdic_dialog_name_get(gdic), MyDialogParam)
 		dlg = klass_dlg(self, pdic=pdic, gdic=gdic, prm=prm)
@@ -759,6 +760,7 @@ class MyFrame(rtmgr.MyFrame):
 			var = self.prm_var(prm, 'camera_id', {})
 			var['choices'] = ids
 
+			gdic['curr_link'] = 'sel_cam'
 			dic_list_push(gdic, 'dialog_type', 'sel_cam')
 			klass_dlg = globals().get(gdic_dialog_name_get(gdic), MyDialogParam)
 			dlg = klass_dlg(self, pdic=pdic, gdic=gdic, prm=prm)
@@ -1153,6 +1155,7 @@ class MyFrame(rtmgr.MyFrame):
 		name = dic['name']
 		pdic = self.load_dic_pdic_setup(name, dic)
 		gdic = self.gdic_get_1st(dic)
+		dic_getset(gdic, 'def_link', 'config')
 		prm = self.get_param(dic.get('param'))
 		self.add_cfg_info(cfg_obj, obj, name, pdic, gdic, True, prm)
 		return hszr
@@ -2016,8 +2019,10 @@ class MyFrame(rtmgr.MyFrame):
 				add_objs = []
 				self.new_link(item, name, pdic, self.sys_gdic, pnl, 'sys', 'sys', add_objs)
 				gdic = self.gdic_get_1st(items)
+				dic_getset(gdic, 'def_link', 'app')
 				if 'param' in items:
-					self.new_link(item, name, pdic, gdic, pnl, 'app', items.get('param'), add_objs)
+					for link in dic_getset(gdic, 'links', ['app']):
+						self.new_link(item, name, pdic, gdic, pnl, link, items.get('param'), add_objs)
 				else:
 					self.add_cfg_info(item, item, name, None, gdic, False, None)
 				szr = sizer_wrap(add_objs, wx.HORIZONTAL, parent=pnl)
@@ -2354,7 +2359,13 @@ class ParamPanel(wx.Panel):
 			var_lst = lambda name, vars : [ var for var in vars if var.get('name') == name ]
 			vars = reduce( lambda lst, name : lst + var_lst(name, vars), self.gdic.get('show_order'), [] )
 
+		curr_link = self.gdic.get('curr_link')
+		def_link = self.gdic.get('def_link')
+
 		for var in vars:
+			if var.get('link', def_link) != curr_link:
+				continue
+
 			name = var.get('name')
 
 			if not gdic_dialog_type_chk(self.gdic, name):

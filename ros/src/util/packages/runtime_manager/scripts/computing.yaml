@@ -80,10 +80,8 @@ subs :
         cmd  : roslaunch cv_tracker dpm_ocv.launch
         param: dpm_ocv
         gui  :
-          flags                  : [ open_dialog, need_camera_info ]
-          config_dialog          : MyDialogCarPedestrian
-          car_pedestrian_obj_key : { car : car_dpm, pedestrian : pedestrian_dpm }
-          open_dialog            : MyDialogDpm
+          links : [ app, car, pedestrian ]
+          flags : [ need_camera_info ]
           use_gpu :
             flags  : [ nl ]
           car :
@@ -104,10 +102,8 @@ subs :
         cmd  : roslaunch cv_tracker dpm_ttic.launch
         param: dpm_ttic
         gui  :
-          flags                  : [ open_dialog, need_camera_info ]
-          config_dialog          : MyDialogCarPedestrian
-          car_pedestrian_obj_key : { car : car_dpm, pedestrian : pedestrian_dpm }
-          open_dialog            : MyDialogDpm
+          links : [ app, car, pedestrian ]
+          flags : [ need_camera_info ]
           use_gpu :
             flags  : [ nl ]
           car :
@@ -482,10 +478,6 @@ subs :
          param: wf_simulator
          
 buttons:
-  car_dpm :
-    param   : car_dpm
-  pedestrian_dpm :
-    param   : pedestrian_dpm
   car_fusion :
     param   : car_fusion
   pedestrian_fusion :
@@ -500,6 +492,7 @@ buttons:
 
 sys_gui:
   dialog   : MyDialogParam
+  def_link : sys
   cpu_chks :
     user_category : Migration Allowance
     user_category_add : [ [ all ], 8 ]
@@ -626,6 +619,7 @@ params :
         dash         : ''
         delim        : ':='
         only_enable  : True
+      link         : sel_cam
     - name      : sync
       kind      : hide
       v         : False
@@ -633,6 +627,85 @@ params :
         dash        : ''
         delim       : ':='
         only_enable : True
+
+    # for [car] link
+    - name  : score_threshold
+      label : Score Threshold
+      min   : -2
+      max   : 2
+      v     : -0.5
+      link  : car
+      topic : /config/car_dpm
+    - name  : group_threshold
+      label : Group Threshold
+      min   : 0
+      max   : 1
+      v     : 0.1
+      link  : car
+      topic : /config/car_dpm
+    - name  : Lambda
+      label : Lambda
+      min   : 1
+      max   : 20
+      v     : 10
+      link  : car
+      topic : /config/car_dpm
+    - name  : num_cells
+      label : Num Cells
+      min   : 2
+      max   : 10
+      v     : 8
+      link  : car
+      topic : /config/car_dpm
+    - name  : num_bins
+      label : Num Bins
+      min   : 2
+      max   : 10
+      v     : 9
+      link  : car
+      topic : /config/car_dpm
+
+    # for [pedestrian] link
+    - name  : pedestrian_score_threshold
+      label : Score Threshold
+      min   : -2
+      max   : 2
+      v     : 0.6
+      link  : pedestrian
+      topic : /config/pedestrian_dpm
+      in_msg: score_threshold
+    - name  : pedestrian_group_threshold
+      label : Group Threshold
+      min   : 0
+      max   : 1
+      v     : 0.3
+      link  : pedestrian
+      topic : /config/pedestrian_dpm
+      in_msg: group_threshold
+    - name  : pedestrian_Lambda
+      label : Lambda
+      min   : 1
+      max   : 20
+      v     : 10
+      link  : pedestrian
+      topic : /config/pedestrian_dpm
+      in_msg: Lambda
+    - name  : pedestrian_num_cells
+      label : Num Cells
+      min   : 2
+      max   : 10
+      v     : 8
+      link  : pedestrian
+      topic : /config/pedestrian_dpm
+      in_msg: num_cells
+    - name  : pedestrian_num_bins
+      label : Num Bins
+      min   : 2
+      max   : 10
+      v     : 9
+      link  : pedestrian
+      topic : /config/pedestrian_dpm
+      in_msg: num_bins
 
   - name  : dpm_ttic
     vars  :
@@ -722,6 +795,7 @@ params :
         dash         : ''
         delim        : ':='
         only_enable  : True
+      link         : sel_cam
     - name      : sync
       kind      : hide
       v         : False
@@ -730,76 +804,95 @@ params :
         delim       : ':='
         only_enable : True
 
-  - name  : car_dpm
-    topic : /config/car_dpm
-    msg   : ConfigCarDpm
-    vars  :
+    # for [car] link
     - name  : score_threshold
       desc  : score_threshold desc sample
       label : Score Threshold
       min   : -2
       max   : 2
       v     : -0.5
+      link  : car
+      topic : /config/car_dpm
     - name  : group_threshold
       desc  : group_threshold desc sample
       label : Group Threshold
       min   : 0
       max   : 1
       v     : 0.1
+      link  : car
+      topic : /config/car_dpm
     - name  : Lambda
       desc  : Lambda desc sample
       label : Lambda
       min   : 1
       max   : 20
       v     : 10
+      link  : car
+      topic : /config/car_dpm
     - name  : num_cells
       desc  : num_cells desc sample
       label : Num Cells
       min   : 2
       max   : 10
       v     : 8
+      link  : car
+      topic : /config/car_dpm
     - name  : num_bins
       desc  : num_bins desc sample
       label : Num Bins
       min   : 2
       max   : 10
       v     : 9
+      link  : car
+      topic : /config/car_dpm
 
-  - name  : pedestrian_dpm
-    topic : /config/pedestrian_dpm
-    msg   : ConfigPedestrianDpm
-    vars  :
-    - name  : score_threshold
+    # for [pedestrian] link
+    - name  : pedestrian_score_threshold
       desc  : score_threshold desc sample
       label : Score Threshold
       min   : -2
       max   : 2
       v     : 0.6
-    - name  : group_threshold
+      link  : pedestrian
+      topic : /config/pedestrian_dpm
+      in_msg: score_threshold
+    - name  : pedestrian_group_threshold
       desc  : group_threshold desc sample
       label : Group Threshold
       min   : 0
       max   : 1
       v     : 0.3
-    - name  : Lambda
+      link  : pedestrian
+      topic : /config/pedestrian_dpm
+      in_msg: group_threshold
+    - name  : pedestrian_Lambda
       desc  : Lambda desc sample
       label : Lambda
       min   : 1
       max   : 20
       v     : 10
-    - name  : num_cells
+      link  : pedestrian
+      topic : /config/pedestrian_dpm
+      in_msg: Lambda
+    - name  : pedestrian_num_cells
       desc  : num_cells desc sample
       label : Num Cells
       min   : 2
       max   : 10
       v     : 8
-    - name  : num_bins
+      link  : pedestrian
+      topic : /config/pedestrian_dpm
+      in_msg: num_cells
+    - name  : pedestrian_num_bins
       desc  : num_bins desc sample
       label : Num Bins
       min   : 2
       max   : 10
       v     : 9
-      
+      link  : pedestrian
+      topic : /config/pedestrian_dpm
+      in_msg: num_bins
+
   - name  : euclidean_cluster
     vars  :
     - name    : publish_ground
@@ -1422,6 +1515,7 @@ params :
         dash         : ''
         delim        : ':='
         only_enable  : True
+      link         : sel_cam
     - name      : sync
       kind      : hide
       v         : False
@@ -1511,6 +1605,7 @@ params :
         dash         : ''
         delim        : ':='
         only_enable  : True
+      link         : sel_cam
     - name      : sync
       kind      : hide
       v         : False
@@ -1571,6 +1666,7 @@ params :
         dash         : ''
         delim        : ':='
         only_enable  : True
+      link         : sel_cam
 
   - name : region_tlr
     topic: /config/superimpose
@@ -1591,6 +1687,7 @@ params :
         dash         : ''
         delim        : ':='
         only_enable  : True
+      link         : sel_cam
 
   - name  : traffic_light
     vars :
@@ -1602,6 +1699,7 @@ params :
       cmd_param :
         dash        : ''
         delim       : ':='
+      link         : sel_cam
 
   - name  : lane_navi
     vars  :
@@ -1936,6 +2034,7 @@ params :
         dash         : ''
         delim        : ':='
         only_enable  : True
+      link         : sel_cam
 
   - name : viewer_sel_cam
     vars :
@@ -1949,6 +2048,7 @@ params :
         dash         : ''
         delim        : ':='
         only_enable  : True
+      link         : sel_cam
 
   - name : laserscan2costmap
     vars :
