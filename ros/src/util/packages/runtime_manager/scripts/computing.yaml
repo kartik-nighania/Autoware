@@ -80,13 +80,14 @@ subs :
         cmd  : roslaunch cv_tracker dpm_ocv.launch
         param: dpm_ocv
         gui  :
-          links : [ app, car, pedestrian ]
+          links : [ app, car, pedestrian, camera ]
           links_info :
             car :
               title : "dpm_ocv (car)"
             pedestrian :
               title : "dpm_ocv (pedestrian)"
-          flags : [ need_camera_info ]
+            camera :
+              title : "dpm_ocv (camera)"
           use_gpu :
             flags  : [ nl ]
           car :
@@ -94,8 +95,6 @@ subs :
           pedestrian :
             border : 16
             flags  : [ left ]
-          sel_cam_dialog_only : [ camera_id ]
-          sel_cam_dialog_allow: [ camera_id ]
           camera_id :
             border : 16
             flags : [ all ]
@@ -118,13 +117,14 @@ subs :
           pedestrian_num_cells       : dpm_ocv
           pedestrian_num_bins        : dpm_ocv
         gui  :
-          links : [ app, car, pedestrian ]
+          links : [ app, car, pedestrian, camera ]
           links_info :
             car :
               title : "dpm_ttic (car)"
             pedestrian :
               title : "dpm_ttic (pedestrian)"
-          flags : [ need_camera_info ]
+            camera :
+              title : "dpm_ttic (camera)"
           use_gpu :
             flags  : [ nl ]
           car :
@@ -134,8 +134,6 @@ subs :
             flags  : [ left ]
           part_model_car :
             flags  : [ hline ]
-          sel_cam_dialog_only : [ camera_id ]
-          sel_cam_dialog_allow: [ camera_id ]
           camera_id :
             border : 16
             flags : [ all ]
@@ -592,6 +590,7 @@ params :
       msg   : ConfigCarDpm
     - topic : /config/pedestrian_dpm
       msg   : ConfigPedestrianDpm
+    no_save_vars : [ camera_id ]
     vars  :
     - name     : use_gpu
       desc     : use_gpu desc sample
@@ -642,12 +641,13 @@ params :
       kind         : menu
       label        : Camera ID
       choices_type : str
+      choices_make : camera_ids()
       v            : ''
       cmd_param    :
         dash         : ''
         delim        : ':='
         only_enable  : True
-      link         : sel_cam
+      link         : camera
     - name      : sync
       kind      : hide
       v         : False
@@ -741,6 +741,7 @@ params :
       msg   : ConfigCarDpm
     - topic : /config/pedestrian_dpm
       msg   : ConfigPedestrianDpm
+    no_save_vars : [ camera_id ]
     vars  :
     - name     : use_gpu
       desc     : use_gpu desc sample
@@ -823,12 +824,13 @@ params :
       kind         : menu
       label        : Camera ID
       choices_type : str
+      choices_make : camera_ids()
       v            : ''
       cmd_param    :
         dash         : ''
         delim        : ':='
         only_enable  : True
-      link         : sel_cam
+      link         : camera
     - name      : sync
       kind      : hide
       v         : False
@@ -1543,6 +1545,7 @@ params :
       kind         : menu
       label        : Camera ID
       choices_type : str
+      choices_make : camera_ids()
       v            : ''
       cmd_param    :
         dash         : ''
@@ -1633,6 +1636,7 @@ params :
       kind         : menu
       label        : Camera ID
       choices_type : str
+      choices_make : camera_ids()
       v            : ''
       cmd_param    :
         dash         : ''
@@ -1694,6 +1698,7 @@ params :
       kind         : menu
       label        : Camera ID
       choices_type : str
+      choices_make : camera_ids()
       v            : ''
       cmd_param    :
         dash         : ''
@@ -1715,6 +1720,7 @@ params :
       kind         : menu
       label        : Camera ID
       choices_type : str
+      choices_make : camera_ids()
       v            : ''
       cmd_param    :
         dash         : ''
@@ -2064,6 +2070,7 @@ params :
       kind         : menu
       label        : Camera ID
       choices_type : str
+      choices_make : camera_ids()
       v            : ''
       cmd_param    :
         dash         : ''
@@ -2078,6 +2085,7 @@ params :
       kind         : menu
       label        : Camera ID
       choices_type : str
+      choices_make : camera_ids()
       v            : ''
       cmd_param    :
         dash         : ''

@@ -350,6 +350,7 @@ params :
       kind         : menu
       label        : Camera ID
       choices_type : str
+      choices_make : camera_ids()
       v            : ''
       cmd_param    :
         dash         : ''
@@ -433,6 +434,7 @@ params :
       kind         : menu
       label        : Camera ID
       choices_type : str
+      choices_make : camera_ids()
       v            : ''
       cmd_param    :
         dash         : ''

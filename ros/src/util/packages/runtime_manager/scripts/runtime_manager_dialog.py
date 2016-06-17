@@ -759,11 +759,6 @@ class MyFrame(rtmgr.MyFrame):
 			return None
 
 		if 'need_camera_info' in gdic.get('flags', []) and msg_box:
-			ids = self.camera_ids()
-			# after marged to master, udpate to use self.get_var()
-			var = self.prm_var(prm, 'camera_id', {})
-			var['choices'] = ids
-
 			gdic['curr_link'] = 'sel_cam'
 			dic_list_push(gdic, 'dialog_type', 'sel_cam')
 			klass_dlg = globals().get(gdic_dialog_name_get(gdic), MyDialogParam)
@@ -1205,10 +1200,6 @@ class MyFrame(rtmgr.MyFrame):
 		self.setup_adjust(pdic, gdic, prm)
 		return hszr
 
-	def camera_ids(self):
-		cmd = "rostopic list | sed -n 's|/image_raw||p' | sed s/^$//"
-		return subprocess.check_output(cmd, shell=True).strip().split()
-
 	def cam_id_to_obj(self, cam_id, v):
 		cam_id_obj = self.cfg_prm_to_obj( {'name':cam_id} )
 		if cam_id_obj is None:
@@ -1237,7 +1228,7 @@ class MyFrame(rtmgr.MyFrame):
 		obj = event.GetEventObject()
 		(_, gdic_org, prm) = self.obj_to_pdic_gdic_prm(obj)
 		if obj.GetValue():
-			gdic_org['ids'] = self.camera_ids()
+			gdic_org['ids'] = camera_ids()
 		ids = gdic_org.get('ids', [])
 
 		if ids == []:
@@ -1265,11 +1256,6 @@ class MyFrame(rtmgr.MyFrame):
 				self.add_cfg_info(cam_id_obj, cam_id_obj, cam_id, pdic, gdic, prm)
 			if not cam_id_obj in cmd_dic:
 				cmd_dic[ cam_id_obj ] = (cmd, None)
-
-		# after marged to master, udpate to use self.get_var()
-		var = self.prm_var(prm, 'camera_id', {})
-		var['choices'] = ids
-
 		#
 		# Dialog
 		#
@@ -1297,7 +1283,7 @@ class MyFrame(rtmgr.MyFrame):
 			if idx < 0 or len(ids) <= idx: # Cancel
 				for cam_id in ids:
 					(pdic, _, _) = self.name_to_pdic_gdic_prm(cam_id)
-					pdic.update(pdic_baks.get(cam_id))
+					pdic.restore(pdic_baks.get(cam_id))
 				set_val(obj, False)
 				return
 
@@ -2536,14 +2522,14 @@ class VarPanel(wx.Panel):
 		label = self.var.get('label', '')
 		self.kind = self.var.get('kind')
 		if self.kind == 'radio_box':
-			choices = self.var.get('choices', [])
+			choices = self.choices_get()
 			style = wx.RA_SPECIFY_COLS if self.var.get('choices_style') == 'h' else wx.RA_SPECIFY_ROWS
 			self.obj = wx.RadioBox(self, wx.ID_ANY, label, choices=choices, majorDimension=0, style=style)
 			self.choices_sel_set(v)
 			self.Bind(wx.EVT_RADIOBOX, self.OnUpdate, self.obj)
 			return
 		if self.kind == 'menu':
-			choices = self.var.get('choices', [])
+			choices = self.choices_get()
 			self.obj = wx.Choice(self, wx.ID_ANY, choices=choices)
 			self.choices_sel_set(v)
 			self.Bind(wx.EVT_CHOICE, self.OnUpdate, self.obj)
@@ -2712,6 +2698,13 @@ class VarPanel(wx.Panel):
 		if file_dialog(self, self.tc, self.var) == wx.ID_OK:
 			self.update(self.var)
 
+	def choices_get(self):
+		if 'choices' in self.var:
+			return self.var.get('choices')
+		if 'choices_make' in self.var:
+			return eval( self.var.get('choices_make') )
+		return []
+
 	def choices_sel_get(self):
 		return self.obj.GetStringSelection() if self.var.get('choices_type') == 'str' else self.obj.GetSelection()
 
@@ -2757,7 +2750,7 @@ class MyDialogParam(rtmgr.MyDialogParam):
 		self.EndModal(0)
 
 	def OnCancel(self, event):
-		self.panel.pdic.update(self.pdic_bak) # restore
+		self.panel.pdic.restore(self.pdic_bak)
 		self.panel.detach_func()
 		self.panel.update()
 		self.EndModal(-1)
@@ -2806,7 +2799,7 @@ class MyDialogDpm(rtmgr.MyDialogDpm):
 			self.frame.OnHyperlinked_obj(obj)
 
 	def OnCancel(self, event):
-		self.panel.pdic.update(self.pdic_bak) # restore
+		self.panel.pdic.restore(self.pdic_bak)
 		self.panel.detach_func()
 		self.panel.update()
 		self.EndModal(-1)
@@ -3105,6 +3098,13 @@ class Pdic:
 			return to_p.has(name)
 		return name in self.dic
 
+	def rm(self, name):
+		to_p = self.share_get(name)
+		if to_p:
+			to_p.rm(name)
+		if to_p is False:
+			del self.dic[name]
+
 	def items(self):
 		return [ (name, self.get(name)) for name in self.dic.keys() + self.share.keys() ]
 
@@ -3117,6 +3117,14 @@ class Pdic:
 	def update(self, dic):
 		for (k,v) in dic.items():
 			self.set(k, v)
+
+	def rm_all(self):
+		for name in self.dic.keys() + self.share.keys():
+			self.rm(name)
+
+	def restore(self, dic):
+		self.rm_all()
+		self.update(dic)
 
 class MyApp(wx.App):
 	def OnInit(self):
@@ -3474,6 +3482,10 @@ def obj_refresh(obj):
 			obj = obj.GetParent()
 		tree = obj.GetData()
 		tree.Refresh()
+
+def camera_ids():
+	cmd = "rostopic list | sed -n 's|/image_raw||p' | sed s/^$//"
+	return subprocess.check_output(cmd, shell=True).strip().split()
 
 # dic_list util (push, pop, get)
 def dic_list_push(dic, key, v):
