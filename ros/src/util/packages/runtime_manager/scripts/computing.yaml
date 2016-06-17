@@ -80,14 +80,11 @@ subs :
         cmd  : roslaunch cv_tracker dpm_ocv.launch
         param: dpm_ocv
         gui  :
-          links : [ app, car, pedestrian, camera ]
+          links : [ app, car, pedestrian, cam ]
           links_info :
-            car :
-              title : "dpm_ocv (car)"
-            pedestrian :
-              title : "dpm_ocv (pedestrian)"
-            camera :
-              title : "dpm_ocv (camera)"
+            car : { title : "dpm_ocv (car)" }
+            pedestrian : { title : "dpm_ocv (pedestrian)" }
+            cam : { title : "select camera" }
           use_gpu :
             flags  : [ nl ]
           car :
@@ -117,14 +114,11 @@ subs :
           pedestrian_num_cells       : dpm_ocv
           pedestrian_num_bins        : dpm_ocv
         gui  :
-          links : [ app, car, pedestrian, camera ]
+          links : [ app, car, pedestrian, cam ]
           links_info :
-            car :
-              title : "dpm_ttic (car)"
-            pedestrian :
-              title : "dpm_ttic (pedestrian)"
-            camera :
-              title : "dpm_ttic (camera)"
+            car : { title : "dpm_ttic (car)" }
+            pedestrian : { title : "dpm_ttic (pedestrian)" }
+            cam : { title : "select camera" }
           use_gpu :
             flags  : [ nl ]
           car :
@@ -145,9 +139,8 @@ subs :
         cmd  : roslaunch cv_tracker rcnn.launch
         param: rcnn
         gui   :
-          flags : [ need_camera_info ]
-          sel_cam_dialog_only : [ camera_id ]
-          sel_cam_dialog_allow: [ camera_id ]
+          links : [ app, cam ]
+          links_info : { cam : { title : "select camera" } }
           camera_id :
             border : 16
             flags : [ all ]
@@ -176,9 +169,8 @@ subs :
         cmd  : roslaunch cv_tracker klt_tracking.launch
         param: car_kf
         gui  :
-          flags : [ need_camera_info ]
-          sel_cam_dialog_only : [ camera_id ]
-          sel_cam_dialog_allow: [ camera_id ]
+          links : [ app, cam ]
+          links_info : { cam : { title : "select camera" } }
           camera_id :
             border : 16
             flags : [ all ]
@@ -190,7 +182,9 @@ subs :
         cmd  : roslaunch cv_tracker kf_tracking.launch
         param: car_kf
         gui  :
-          flags                  : [ open_dialog, need_camera_info ]
+          links : [ app, cam ]
+          links_info : { cam : { title : "select camera" } }
+          flags                  : [ open_dialog ]
           config_dialog          : MyDialogCarPedestrian
           car_pedestrian_obj_key : { car : car_kf, pedestrian : pedestrian_kf }
           config_dialog_only     :
@@ -209,8 +203,6 @@ subs :
           pedestrian :
             border : 16
             flags  : [ left ]
-          sel_cam_dialog_only : [ camera_id ]
-          sel_cam_dialog_allow: [ camera_id ]
           camera_id :
             border : 16
             flags : [ all ]
@@ -222,15 +214,16 @@ subs :
         cmd  : roslaunch cv_tracker reprojection.launch
         param: obj_reproj
         gui  :
-          flags                : [ open_dialog, no_link, need_camera_info ]
+          links : [ cam ]
+          links_info : { cam : { title : "select camera" } }
+          #flags                : [ open_dialog, no_link ] ## no_link ?
+          flags                : [ open_dialog ]
           open_dialog_ok_label : Start
           car :
             user_category : Detection Target
           pedestrian :
             border : 16
             flags  : [ left ]
-          sel_cam_dialog_only : [ camera_id ]
-          sel_cam_dialog_allow: [ camera_id ]
           camera_id :
             border : 16
             flags : [ all ]
@@ -270,9 +263,8 @@ subs :
         cmd  : roslaunch road_wizard feat_proj.launch
         param: feat_proj
         gui  :
-          flags : [ need_camera_info ]
-          sel_cam_dialog_only : [ camera_id ]
-          sel_cam_dialog_allow: [ camera_id ]
+          links : [ app, cam ]
+          links_info : { cam : { title : "select camera" } }
           camera_id :
             border : 16
             flags : [ all ]
@@ -282,9 +274,8 @@ subs :
         cmd  : roslaunch road_wizard traffic_light_recognition.launch
         param: region_tlr
         gui  :
-          flags : [ need_camera_info ]
-          sel_cam_dialog_only : [ camera_id ]
-          sel_cam_dialog_allow: [ camera_id ]
+          links : [ app, cam ]
+          links_info : { cam : { title : "select camera" } }
           camera_id :
             border : 16
             flags : [ all ]
@@ -297,9 +288,8 @@ subs :
         cmd  : roslaunch viewers viewers.launch viewer_type:=image_viewer
         param: viewer_sel_cam
         gui  :
-          flags : [ need_camera_info ]
-          sel_cam_dialog_only : [ camera_id ]
-          sel_cam_dialog_allow: [ camera_id ]
+          links : [ cam ]
+          links_info : { cam : { title : "select camera" } }
           camera_id :
             border : 16
             flags : [ all ]
@@ -308,9 +298,8 @@ subs :
         cmd  : roslaunch viewers viewers.launch viewer_type:=image_d_viewer
         param: viewer_sel_cam
         gui  :
-          flags : [ need_camera_info ]
-          sel_cam_dialog_only : [ camera_id ]
-          sel_cam_dialog_allow: [ camera_id ]
+          links : [ cam ]
+          links_info : { cam : { title : "select camera" } }
           camera_id :
             border : 16
             flags : [ all ]
@@ -319,9 +308,8 @@ subs :
         cmd  : roslaunch viewers viewers.launch viewer_type:=points_image_viewer
         param: viewer_sel_cam
         gui  :
-          flags : [ need_camera_info ]
-          sel_cam_dialog_only : [ camera_id ]
-          sel_cam_dialog_allow: [ camera_id ]
+          links : [ cam ]
+          links_info : { cam : { title : "select camera" } }
           camera_id :
             border : 16
             flags : [ all ]
@@ -330,9 +318,8 @@ subs :
         cmd  : roslaunch viewers viewers.launch viewer_type:=points_image_d_viewer
         param: viewer_sel_cam
         gui  :
-          flags : [ need_camera_info ]
-          sel_cam_dialog_only : [ camera_id ]
-          sel_cam_dialog_allow: [ camera_id ]
+          links : [ cam ]
+          links_info : { cam : { title : "select camera" } }
           camera_id :
             border : 16
             flags : [ all ]
@@ -341,9 +328,8 @@ subs :
         cmd  : roslaunch viewers viewers.launch viewer_type:=vscan_image_viewer
         param: viewer_sel_cam
         gui  :
-          flags : [ need_camera_info ]
-          sel_cam_dialog_only : [ camera_id ]
-          sel_cam_dialog_allow: [ camera_id ]
+          links : [ cam ]
+          links_info : { cam : { title : "select camera" } }
           camera_id :
             border : 16
             flags : [ all ]
@@ -352,9 +338,8 @@ subs :
         cmd  : roslaunch viewers viewers.launch viewer_type:=vscan_image_d_viewer
         param: viewer_sel_cam
         gui  :
-          flags : [ need_camera_info ]
-          sel_cam_dialog_only : [ camera_id ]
-          sel_cam_dialog_allow: [ camera_id ]
+          links : [ cam ]
+          links_info : { cam : { title : "select camera" } }
           camera_id :
             border : 16
             flags : [ all ]
@@ -647,7 +632,7 @@ params :
         dash         : ''
         delim        : ':='
         only_enable  : True
-      link         : camera
+      link         : cam
     - name      : sync
       kind      : hide
       v         : False
@@ -830,7 +815,7 @@ params :
         dash         : ''
         delim        : ':='
         only_enable  : True
-      link         : camera
+      link         : cam
     - name      : sync
       kind      : hide
       v         : False
@@ -1474,6 +1459,7 @@ params :
   - name  : car_kf
     topic : /config/car_kf
     msg   : ConfigCarKf
+    no_save_vars : [ camera_id ]
     vars  :
     - name  : initial_lifespan
       desc  : initial_lifespan desc sample
@@ -1551,7 +1537,7 @@ params :
         dash         : ''
         delim        : ':='
         only_enable  : True
-      link         : sel_cam
+      link         : cam
     - name      : sync
       kind      : hide
       v         : False
@@ -1614,6 +1600,7 @@ params :
       v     : 0
 
   - name : obj_reproj
+    no_save_vars : [ camera_id ]
     vars :
     - name     : car
       desc     : car desc sample
@@ -1642,7 +1629,7 @@ params :
         dash         : ''
         delim        : ':='
         only_enable  : True
-      link         : sel_cam
+      link         : cam
     - name      : sync
       kind      : hide
       v         : False
@@ -1680,6 +1667,7 @@ params :
   - name : feat_proj
     topic: /config/adjust_xy
     msg  : adjust_xy
+    no_save_vars : [ camera_id ]
     vars :
     - name : x
       desc : x desc sample
@@ -1704,11 +1692,12 @@ params :
         dash         : ''
         delim        : ':='
         only_enable  : True
-      link         : sel_cam
+      link         : cam
 
   - name : region_tlr
     topic: /config/superimpose
     msg  : Bool
+    no_save_vars : [ camera_id ]
     vars :
     - name  : data
       desc  : data desc sample
@@ -1726,7 +1715,7 @@ params :
         dash         : ''
         delim        : ':='
         only_enable  : True
-      link         : sel_cam
+      link         : cam
 
   - name  : traffic_light
     vars :
@@ -2022,6 +2011,7 @@ params :
   - name  : rcnn
     topic : /config/rcnn
     msg   : ConfigRcnn
+    no_save_vars : [ camera_id ]
     vars  :
     - name  : score_threshold
       desc  : score_threshold desc sample
@@ -2076,9 +2066,10 @@ params :
         dash         : ''
         delim        : ':='
         only_enable  : True
-      link         : sel_cam
+      link         : cam
 
   - name : viewer_sel_cam
+    no_save_vars : [ camera_id ]
     vars :
     - name         : camera_id
       desc         : camera_id desc sample
@@ -2091,7 +2082,7 @@ params :
         dash         : ''
         delim        : ':='
         only_enable  : True
-      link         : sel_cam
+      link         : cam
 
   - name : laserscan2costmap
     vars :

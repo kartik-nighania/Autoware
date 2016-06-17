@@ -440,6 +440,7 @@ params :
         dash         : ''
         delim        : ':='
         only_enable  : True
+      link         : sel_cam
     - name      : sync
       kind      : hide
       v         : False

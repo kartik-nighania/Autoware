@@ -1033,10 +1033,12 @@ class MyFrame(rtmgr.MyFrame):
 				var[k] = adj
 
 		def_link = gdic.get('def_link', 'app')
-		app_gdic = self.cfg_dic( {'pdic':pdic} ).get('gdic', {})
+
+		obj = self.cfg_dic( {'pdic':pdic, 'gdic':gdic, 'param':prm}, sys=None ).get('obj')
+		obj_gdic = self.cfg_dic( {'obj':obj} ).get('gdic', {})
 
 		for link in gdic.get('links', [ def_link ]):
-			inf = dic_getset(dic_getset(app_gdic, 'links_info', {}), link, {})
+			inf = dic_getset(dic_getset(obj_gdic, 'links_info', {}), link, {})
 			if lst_append_once(dic_getset(inf, 'flags', []), 'setup_done'):
 				continue
 			(cfg_obj, dic) = self.cfg_obj_dic( {'pdic':pdic, 'gdic':gdic, 'param':prm}, sys=None, cfg_label=link )
@@ -1055,7 +1057,7 @@ class MyFrame(rtmgr.MyFrame):
 			if adj == 'empty':
 				enables_set(cfg_obj, 'empty', False)
 			elif adj == 'static' or adj == 'dynamic':
-				lst = dic_getset(app_gdic, 'ext_toggle_enables', [])
+				lst = dic_getset(obj_gdic, 'ext_toggle_enables', [])
 				if not lst_append_once(lst, cfg_obj) and adj == 'dynamic':
 					enables_set(cfg_obj, 'toggle', False)
 
@@ -2057,15 +2059,17 @@ class MyFrame(rtmgr.MyFrame):
 				self.new_link(item, name, pdic, self.sys_gdic, pnl, 'sys', 'sys', add_objs)
 				gdic = self.gdic_get_1st(items)
 				def_link = dic_getset(gdic, 'def_link', 'app')
+				prm = self.get_param(items.get('param'))
 				if 'param' in items:
 					for link in dic_getset(gdic, 'links', [ def_link ]):
-						self.new_link(item, name, pdic, gdic, pnl, link, items.get('param'), add_objs)
+						if next( (var for var in prm.get('vars', []) if var.get('link', def_link) == link), None):
+							self.new_link(item, name, pdic, gdic, pnl, link, items.get('param'), add_objs)
 				else:
 					self.add_cfg_info(item, item, name, None, gdic, None)
 
 				self.setup_adjust(pdic, self.sys_gdic, self.get_param('sys'))
 				if 'param' in items:
-					self.setup_adjust(pdic, gdic, self.get_param(items.get('param')))
+					self.setup_adjust(pdic, gdic, prm)
 
 				szr = sizer_wrap(add_objs, wx.HORIZONTAL, parent=pnl)
 				szr.Fit(pnl)
@@ -2819,6 +2823,7 @@ class MyDialogCarPedestrian(rtmgr.MyDialogCarPedestrian):
 		frame = self.GetParent()
 		self.frame = frame
 
+		gdic = self.gdic
 		title = gdic.get('links_info', {}).get(gdic.get('curr_link'), {}).get('title', prm.get('name', ''))
 		self.SetTitle(title)
 
@@ -3102,7 +3107,7 @@ class Pdic:
 		to_p = self.share_get(name)
 		if to_p:
 			to_p.rm(name)
-		if to_p is False:
+		if to_p is False and name in self.dic:
 			del self.dic[name]
 
 	def items(self):
