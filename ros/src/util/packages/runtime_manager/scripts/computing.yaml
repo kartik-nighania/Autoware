@@ -81,6 +81,11 @@ subs :
         param: dpm_ocv
         gui  :
           links : [ app, car, pedestrian ]
+          links_info :
+            car :
+              title : "dpm_ocv (car)"
+            pedestrian :
+              title : "dpm_ocv (pedestrian)"
           flags : [ need_camera_info ]
           use_gpu :
             flags  : [ nl ]
@@ -114,6 +119,11 @@ subs :
           pedestrian_num_bins        : dpm_ocv
         gui  :
           links : [ app, car, pedestrian ]
+          links_info :
+            car :
+              title : "dpm_ttic (car)"
+            pedestrian :
+              title : "dpm_ttic (pedestrian)"
           flags : [ need_camera_info ]
           use_gpu :
             flags  : [ nl ]

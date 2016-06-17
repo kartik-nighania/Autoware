@@ -2743,7 +2743,8 @@ class MyDialogParam(rtmgr.MyDialogParam):
 		self.panel = ParamPanel(parent, frame=frame, pdic=pdic, gdic=gdic, prm=prm)
 		szr = sizer_wrap((self.panel,), wx.VERTICAL, 1, wx.EXPAND, 0, parent)
 
-		self.SetTitle(prm.get('name', ''))
+		title = gdic.get('links_info', {}).get(gdic.get('curr_link'), {}).get('title', prm.get('name', ''))
+		self.SetTitle(title)
 		(w,h) = self.GetSize()
 		(w2,_) = szr.GetMinSize()
 		w2 += 20
@@ -2780,7 +2781,8 @@ class MyDialogDpm(rtmgr.MyDialogDpm):
 		self.panel = ParamPanel(parent, frame=frame, pdic=pdic, gdic=gdic, prm=prm)
 		szr = sizer_wrap((self.panel,), wx.VERTICAL, 1, wx.EXPAND, 0, parent)
 
-		self.SetTitle(prm.get('name', ''))
+		title = gdic.get('links_info', {}).get(gdic.get('curr_link'), {}).get('title', prm.get('name', ''))
+		self.SetTitle(title)
 		(w,h) = self.GetSize()
 		(w2,_) = szr.GetMinSize()
 		w2 += 20
@@ -2824,7 +2826,8 @@ class MyDialogCarPedestrian(rtmgr.MyDialogCarPedestrian):
 		frame = self.GetParent()
 		self.frame = frame
 
-		self.SetTitle(prm.get('name', ''))
+		title = gdic.get('links_info', {}).get(gdic.get('curr_link'), {}).get('title', prm.get('name', ''))
+		self.SetTitle(title)
 
 		fix_link_color(self.hyperlink_car)
 		fix_link_color(self.hyperlink_pedestrian)
