@@ -2444,11 +2444,11 @@ class ParamPanel(wx.Panel):
 			flag = wx_flag_get(gdic_v.get('flags', []))
 
 			do_category = 'no_category' not in gdic_v.get('flags', [])
-			if do_category and self.in_msg(var):
+			if do_category and 'topic' in var:
 				bak = (szr, hszr)
 				(szr, hszr) = topic_szrs
 				if szr is None:
-					szr = static_box_sizer(self, 'topic : ' + self.prm.get('topic'))
+					szr = static_box_sizer(self, 'topic : ' + var.get('topic'))
 					bak[0].Add(szr, 0, wx.EXPAND | wx.ALL, 4)
 			targ_szr = szr
 			if vp.is_nl():
@@ -2478,7 +2478,7 @@ class ParamPanel(wx.Panel):
 			if 'nl' in gdic_v.get('flags', []):
 				hszr = None
 
-			if do_category and self.in_msg(var):
+			if do_category and 'topic' in var:
 				topic_szrs = (szr, hszr)
 				(szr, hszr) = bak
 
@@ -2520,17 +2520,6 @@ class ParamPanel(wx.Panel):
 
 			vp = gdic_v.get('var')
 			lst_remove_once(self.gdic.get('ext_toggle_enables', []), vp)
-
-	def in_msg(self, var):
-		if 'topic' not in self.prm or 'msg' not in self.prm:
-			return False
-		if self.tmp_msg is None:
-			klass_msg = globals().get( self.prm.get('msg') )
-			if klass_msg is None:
-				return False
-			self.tmp_msg = klass_msg()
-		(obj, attr) = msg_path_to_obj_attr(self.tmp_msg, var.get('name'))
-		return obj and attr in obj.__slots__
 
 class VarPanel(wx.Panel):
 	def __init__(self, *args, **kwds):
