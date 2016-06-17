@@ -1276,7 +1276,7 @@ class MyFrame(rtmgr.MyFrame):
 		cam_id = ids[0]
 		while obj.GetValue():
 			(pdic, gdic, _) = self.name_to_pdic_gdic_prm(cam_id)
-			pdic['camera_id'] = cam_id
+			pdic.set('camera_id', cam_id)
 			dic_list_push(gdic, 'dialog_type', 'open2')
 			klass_dlg = globals().get(gdic_dialog_name_get(gdic), MyDialogParam)
 			dlg = klass_dlg(self, pdic=pdic, gdic=gdic, prm=prm)
@@ -1288,7 +1288,7 @@ class MyFrame(rtmgr.MyFrame):
 			dlg_ret = show_modal(dlg)
 
 			dic_list_pop(gdic, 'dialog_type')
-			pdic['camera_id'] = cam_id # restore
+			pdic.set('camera_id', cam_id) # restore
 
 			if dlg_ret == 0: # OK
 				break
@@ -1310,7 +1310,7 @@ class MyFrame(rtmgr.MyFrame):
 		for cam_id in ids:
 			cam_id_obj = self.cfg_prm_to_obj( {'name':cam_id} )
 			(pdic, _, _) = self.obj_to_pdic_gdic_prm(cam_id_obj)
-			pdic['solo_camera'] = False
+			pdic.set('solo_camera', False)
 			#print '@', cam_id, cam_id_obj.GetValue()
 			self.OnLaunchKill_obj(cam_id_obj)
 
@@ -2858,11 +2858,11 @@ class MyDialogLaneStop(rtmgr.MyDialogLaneStop):
 			update_func(self.pdic, self.gdic, self.prm)
 
 	def OnTrafficRedLight(self, event):
-		self.pdic['traffic_light'] = 0
+		self.pdic.set('traffic_light', 0)
 		self.update()
 		
 	def OnTrafficGreenLight(self, event):
-		self.pdic['traffic_light'] = 1
+		self.pdic.set('traffic_light', 1)
 		self.update()
 
 	def OnTrafficLightRecognition(self, event):
