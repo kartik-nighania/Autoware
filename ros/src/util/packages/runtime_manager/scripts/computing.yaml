@@ -148,14 +148,12 @@ subs :
       - name : range_fusion
         desc : range_fusion desc sample
         cmd  : roslaunch cv_tracker ranging.launch
-        param: car_fusion
+        param: range_fusion
         gui  :
-          flags                  : [ open_dialog ]
-          config_dialog          : MyDialogCarPedestrian
-          car_pedestrian_obj_key : { car : car_fusion, pedestrian : pedestrian_fusion }
-          config_dialog_only     : [ min_low_height, max_low_height, max_height, min_points, dispersion ]
-          open_dialog_only       : [ car, pedestrian ]
-          open_dialog_ok_label   : Start
+          links : [ app, car, pedestrian ]
+          links_info :
+            car : { title : "car_fusion" }
+            pedestrian : { title : "pedestrian_fusion" }
           car :
             user_category : Detection Target
           pedestrian :
@@ -482,10 +480,6 @@ subs :
          param: wf_simulator
          
 buttons:
-  car_fusion :
-    param   : car_fusion
-  pedestrian_fusion :
-    param   : pedestrian_fusion
   car_kf :
     param   : car_kf
   pedestrian_kf :
@@ -1849,41 +1843,13 @@ params :
         dash      : ''
         delim     : ':='
 
-  - name  : car_fusion
-    topic : /config/car_fusion
-    msg   : ConfigCarFusion
+  - name  : range_fusion
+    topics:
+    - topic : /config/car_fusion
+      msg   : ConfigCarFusion
+    - topic : /config/pedestrian_fusion
+      msg   : ConfigPedestrianFusion
     vars  :
-    - name  : min_low_height
-      desc  : min_low_height desc sample
-      label : Minimum Height(Lower Bound)
-      min   : -2
-      max   : 0
-      v     : -1.5
-    - name  : max_low_height
-      desc  : max_low_height desc sample
-      label : Minimum Height(Upper Bound)
-      min   : -2
-      max   : 0
-      v     : -1.0
-    - name  : max_height
-      desc  : max_height desc sample
-      label : Maximum Height
-      min   : 0
-      max   : 10
-      v     : 2.0
-    - name  : min_points
-      desc  : min_points desc sample
-      label : Min Points in Box
-      min   : 1
-      max   : 100
-      v     : 2
-    - name  : dispersion
-      desc  : dispersion desc sample
-      label : Coefficient of Variation
-      min   : 0.0
-      max   : 5.0
-      v     : 1.0
-
     - name     : car
       desc     : car desc sample
       label    : Car
@@ -1908,40 +1874,94 @@ params :
         delim       : ':='
         only_enable : True
 
-  - name  : pedestrian_fusion
-    topic : /config/pedestrian_fusion
-    msg   : ConfigPedestrianFusion
-    vars  :
+    # for [car] link
     - name  : min_low_height
       desc  : min_low_height desc sample
       label : Minimum Height(Lower Bound)
       min   : -2
       max   : 0
       v     : -1.5
+      link  : car
+      topic : /config/car_fusion
     - name  : max_low_height
       desc  : max_low_height desc sample
       label : Minimum Height(Upper Bound)
       min   : -2
       max   : 0
       v     : -1.0
+      link  : car
+      topic : /config/car_fusion
     - name  : max_height
       desc  : max_height desc sample
       label : Maximum Height
       min   : 0
       max   : 10
       v     : 2.0
+      link  : car
+      topic : /config/car_fusion
     - name  : min_points
       desc  : min_points desc sample
       label : Min Points in Box
       min   : 1
       max   : 100
       v     : 2
+      link  : car
+      topic : /config/car_fusion
     - name  : dispersion
       desc  : dispersion desc sample
       label : Coefficient of Variation
       min   : 0.0
       max   : 5.0
       v     : 1.0
+      link  : car
+      topic : /config/car_fusion
+
+    # for [pedestrian] link
+    - name  : pedestrian_min_low_height
+      desc  : min_low_height desc sample
+      label : Minimum Height(Lower Bound)
+      min   : -2
+      max   : 0
+      v     : -1.5
+      link  : pedestrian
+      topic : /config/pedestrian_fusion
+      in_msg: min_low_height
+    - name  : pedestrian_max_low_height
+      desc  : max_low_height desc sample
+      label : Minimum Height(Upper Bound)
+      min   : -2
+      max   : 0
+      v     : -1.0
+      link  : pedestrian
+      topic : /config/pedestrian_fusion
+      in_msg: max_low_height
+    - name  : pedestrian_max_height
+      desc  : max_height desc sample
+      label : Maximum Height
+      min   : 0
+      max   : 10
+      v     : 2.0
+      link  : pedestrian
+      topic : /config/pedestrian_fusion
+      in_msg: max_height
+    - name  : pedestrian_min_points
+      desc  : min_points desc sample
+      label : Min Points in Box
+      min   : 1
+      max   : 100
+      v     : 2
+      link  : pedestrian
+      topic : /config/pedestrian_fusion
+      in_msg: min_points
+    - name  : pedestrian_dispersion
+      desc  : dispersion desc sample
+      label : Coefficient of Variation
+      min   : 0.0
+      max   : 5.0
+      v     : 1.0
+      link  : pedestrian
+      topic : /config/pedestrian_fusion
+      in_msg: dispersion
 
   - name  : rcnn
     topic : /config/rcnn
