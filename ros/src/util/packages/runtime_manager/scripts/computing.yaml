@@ -165,7 +165,7 @@ subs :
       - name : klt_track
         desc : klt_track desc sample
         cmd  : roslaunch cv_tracker klt_tracking.launch
-        param: car_kf
+        param: klt_track
         gui  :
           links : [ app, cam ]
           links_info : { cam : { title : "select camera" } }
@@ -178,24 +178,13 @@ subs :
       - name : kf_track
         desc : kf_track desc sample
         cmd  : roslaunch cv_tracker kf_tracking.launch
-        param: car_kf
+        param: kf_track
         gui  :
-          links : [ app, cam ]
-          links_info : { cam : { title : "select camera" } }
-          flags                  : [ open_dialog ]
-          config_dialog          : MyDialogCarPedestrian
-          car_pedestrian_obj_key : { car : car_kf, pedestrian : pedestrian_kf }
-          config_dialog_only     :
-            - initial_lifespan
-            - default_lifespan
-            - noise_covariance
-            - measurement_noise_covariance
-            - error_estimate_covariance
-            - percentage_of_overlapping
-            - orb_features
-            - use_orb
-          open_dialog_only       : [ car, pedestrian ]
-          open_dialog_ok_label   : Start
+          links : [ app, car, pedestrian, cam ]
+          links_info :
+            car : { title : "car_kf" }
+            pedestrian : { title : "pedestrian_kf" }
+            cam : { title : "select camera" }
           car :
             user_category : Detection Target
           pedestrian :
@@ -480,10 +469,6 @@ subs :
          param: wf_simulator
          
 buttons:
-  car_kf :
-    param   : car_kf
-  pedestrian_kf :
-    param   : pedestrian_kf
   synchronization :
     desc: synchronization desc sample
     run : roslaunch runtime_manager synchronization.launch
@@ -1385,59 +1370,12 @@ params :
         dash     : ''
         delim    : ':='   
 
-  - name  : car_kf
+  - name  : klt_track
     topic : /config/car_kf
     msg   : ConfigCarKf
     no_save_vars : [ camera_id ]
     vars  :
-    - name  : initial_lifespan
-      desc  : initial_lifespan desc sample
-      label : Initial Lifespan
-      min   : 1
-      max   : 100
-      v     : 4
-    - name  : default_lifespan
-      desc  : default_lifespan desc sample
-      label : Default Lifespan
-      min   : 1
-      max   : 100
-      v     : 8
-    - name  : noise_covariance
-      desc  : noise_covariance desc sample
-      label : Noise Covariance
-      min   : 1
-      max   : 1000
-      v     : 1.0
-    - name  : measurement_noise_covariance
-      desc  : measurement_noise_covariance desc sample
-      label : Measurement Noise Covariance
-      min   : 1
-      max   : 1000
-      v     : 25.0
-    - name  : error_estimate_covariance
-      desc  : error_estimate_covariance desc sample
-      label : Error estimate covariance
-      min   : 1
-      max   : 10000000
-      v     : 1000000.0
-    - name  : percentage_of_overlapping
-      desc  : percentage_of_overlapping desc sample
-      label : Percentage of Overlapping
-      min   : 0
-      max   : 100
-      v     : 0.0
-    - name  : orb_features
-      desc  : orb_features desc sample
-      label : Number of ORB features
-      min   : 500
-      max   : 5000
-      v     : 2000
-    - name  : use_orb
-      desc  : use_orb desc sample
-      label : Use ORB Matching?
-      min   : 0
-      max   : 1
-      v     : 0
+    - include_param_vars : car_kf
 
     - name     : car
       desc     : car desc sample
@@ -1475,9 +1413,61 @@ params :
         delim       : ':='
         only_enable : True
 
-  - name  : pedestrian_kf
-    topic : /config/pedestrian_kf
-    msg   : ConfigPedestrianKf
+  - name  : kf_track
+    topics:
+    - topic : /config/car_kf
+      msg   : ConfigCarKf
+    - topic : /config/pedestrian_kf
+      msg   : ConfigPedestrianKf
+    no_save_vars : [ camera_id ]
+    vars  :
+    - name     : car
+      desc     : car desc sample
+      label    : Car
+      kind     : checkbox
+      v        : True
+      cmd_param:
+        dash     : ''
+        delim    : ':='
+    - name     : pedestrian
+      desc     : pedestrian desc sample
+      label    : Pedestrian
+      kind     : checkbox
+      v        : False
+      cmd_param:
+        dash     : ''
+        delim    : ':='
+    - name         : camera_id
+      desc         : camera_id desc sample
+      kind         : menu
+      label        : Camera ID
+      choices_type : str
+      choices_make : camera_ids()
+      v            : ''
+      cmd_param    :
+        dash         : ''
+        delim        : ':='
+        only_enable  : True
+      link         : cam
+    - name      : sync
+      kind      : hide
+      v         : False
+      cmd_param :
+        dash        : ''
+        delim       : ':='
+        only_enable : True
+
+    # for [car] link
+    - include_param_vars : car_kf
+      link : car
+      topic: /config/car_kf
+
+    # for [pedestrian] link
+    - include_param_vars : pedestrian_kf
+      link : pedestrian
+      topic: /config/pedestrian_kf
+
+  - name  : car_kf
     vars  :
     - name  : initial_lifespan
       desc  : initial_lifespan desc sample
@@ -1527,6 +1517,65 @@ params :
       min   : 0
       max   : 1
       v     : 0
+
+  - name  : pedestrian_kf
+    vars  :
+    - name  : pedestrian_initial_lifespan
+      desc  : initial_lifespan desc sample
+      label : Initial Lifespan
+      min   : 1
+      max   : 100
+      v     : 4
+      in_msg: initial_lifespan
+    - name  : pedestrian_default_lifespan
+      desc  : default_lifespan desc sample
+      label : Default Lifespan
+      min   : 1
+      max   : 100
+      v     : 8
+      in_msg: default_lifespan
+    - name  : pedestrian_noise_covariance
+      desc  : noise_covariance desc sample
+      label : Noise Covariance
+      min   : 1
+      max   : 1000
+      v     : 1.0
+      in_msg: noise_covariance
+    - name  : pedestrian_measurement_noise_covariance
+      desc  : measurement_noise_covariance desc sample
+      label : Measurement Noise Covariance
+      min   : 1
+      max   : 1000
+      v     : 25.0
+      in_msg: measurement_noise_covariance
+    - name  : pedestrian_error_estimate_covariance
+      desc  : error_estimate_covariance desc sample
+      label : Error estimate covariance
+      min   : 1
+      max   : 10000000
+      v     : 1000000.0
+      in_msg: error_estimate_covariance
+    - name  : pedestrian_percentage_of_overlapping
+      desc  : percentage_of_overlapping desc sample
+      label : Percentage of Overlapping
+      min   : 0
+      max   : 100
+      v     : 0.0
+      in_msg: percentage_of_overlapping
+    - name  : pedestrian_orb_features
+      desc  : orb_features desc sample
+      label : Number of ORB features
+      min   : 500
+      max   : 5000
+      v     : 2000
+      in_msg: orb_features
+    - name  : pedestrian_use_orb
+      desc  : use_orb desc sample
+      label : Use ORB Matching?
+      min   : 0
+      max   : 1
+      v     : 0
+      in_msg: use_orb
 
   - name : obj_reproj
     no_save_vars : [ camera_id ]
