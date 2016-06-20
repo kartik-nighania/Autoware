@@ -1771,24 +1771,37 @@ class MyFrame(rtmgr.MyFrame):
 
 	def add_params(self, params):
 		k = 'include_param_vars'
-		for prm in params:
-			vars = prm.get('vars', [])
+		def inc_vars(vars):
 			for var in vars:
 				inm = var.get(k)
 				if inm is None:
 					continue
 				ivars = next( (iprm.get('vars', []) for iprm in params if iprm.get('name') == inm), [])
-				topic = var.get('topic')
-				link = var.get('link')
-				if topic or link:
+				if not ivars:
+					continue
+				inc_vars(ivars)
+				overwrite = var.get('overwrite')
+				if overwrite:
 					ivars = [ ivar.copy() for ivar in ivars ]
+					topic = overwrite.get('topic')
+					link = overwrite.get('link')
+					name_prefix = overwrite.get('name_prefix', '')
+					name_postfix = overwrite.get('name_postfix', '')
 					for ivar in ivars:
+						name = ivar.get('name')
+						if name in overwrite:
+							ivar.update(overwrite.get(name))
 						if topic:
 							ivar['topic'] = topic
 						if link:
 							ivar['link'] = link
+						if name_prefix or name_postfix:
+							ivar['name'] = name_prefix + name + name_postfix
 				idx = vars.index(var)
 				vars[idx:idx+1] = ivars
+		for prm in params:
+			inc_vars(prm.get('vars', []))
+
 		for prm in params:
 			if 'topics' not in prm and 'topic' in prm and 'msg' in prm:
 				prm['topics'] = [ { 'topic':prm.get('topic'), 'msg':prm.get('msg') } ]

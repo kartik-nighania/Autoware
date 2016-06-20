@@ -620,10 +620,7 @@ params :
         delim       : ':='
         only_enable : True
 
-    # for [car] link
     - include_param_vars : dpm_car
-
-    # for [pedestrian] link
     - include_param_vars : dpm_pedestrian
 
   - name  : dpm_ttic
@@ -730,13 +727,28 @@ params :
         delim       : ':='
         only_enable : True
 
-    # for [car] link
     - include_param_vars : dpm_car
-
-    # for [pedestrian] link
     - include_param_vars : dpm_pedestrian
 
   - name : dpm_car
+    vars :
+    - include_param_vars : dpm
+      overwrite :
+        link       : car
+        topic      : /config/car_dpm
+        name_prefix: car_
+
+  - name : dpm_pedestrian
+    vars :
+    - include_param_vars : dpm
+      overwrite :
+        link       : pedestrian
+        topic      : /config/pedestrian_dpm
+        name_prefix: pedestrian_
+        score_threshold : { v : 0.6 }
+        group_threshold : { v : 0.3 }
+
+  - name : dpm
     vars :
     - name  : score_threshold
       desc  : score_threshold desc sample
@@ -744,87 +756,34 @@ params :
       min   : -2
       max   : 2
       v     : -0.5
-      link  : car
-      topic : /config/car_dpm
+      in_msg: score_threshold
     - name  : group_threshold
       desc  : group_threshold desc sample
       label : Group Threshold
       min   : 0
       max   : 1
       v     : 0.1
-      link  : car
-      topic : /config/car_dpm
+      in_msg: group_threshold
     - name  : Lambda
       desc  : Lambda desc sample
       label : Lambda
       min   : 1
       max   : 20
       v     : 10
-      link  : car
-      topic : /config/car_dpm
+      in_msg: Lambda
     - name  : num_cells
       desc  : num_cells desc sample
       label : Num Cells
       min   : 2
       max   : 10
       v     : 8
-      link  : car
-      topic : /config/car_dpm
+      in_msg: num_cells
     - name  : num_bins
       desc  : num_bins desc sample
       label : Num Bins
       min   : 2
       max   : 10
       v     : 9
-      link  : car
-      topic : /config/car_dpm
-
-  - name : dpm_pedestrian
-    vars :
-    - name  : pedestrian_score_threshold
-      desc  : score_threshold desc sample
-      label : Score Threshold
-      min   : -2
-      max   : 2
-      v     : 0.6
-      link  : pedestrian
-      topic : /config/pedestrian_dpm
-      in_msg: score_threshold
-    - name  : pedestrian_group_threshold
-      desc  : group_threshold desc sample
-      label : Group Threshold
-      min   : 0
-      max   : 1
-      v     : 0.3
-      link  : pedestrian
-      topic : /config/pedestrian_dpm
-      in_msg: group_threshold
-    - name  : pedestrian_Lambda
-      desc  : Lambda desc sample
-      label : Lambda
-      min   : 1
-      max   : 20
-      v     : 10
-      link  : pedestrian
-      topic : /config/pedestrian_dpm
-      in_msg: Lambda
-    - name  : pedestrian_num_cells
-      desc  : num_cells desc sample
-      label : Num Cells
-      min   : 2
-      max   : 10
-      v     : 8
-      link  : pedestrian
-      topic : /config/pedestrian_dpm
-      in_msg: num_cells
-    - name  : pedestrian_num_bins
-      desc  : num_bins desc sample
-      label : Num Bins
-      min   : 2
-      max   : 10
-      v     : 9
-      link  : pedestrian
-      topic : /config/pedestrian_dpm
       in_msg: num_bins
 
   - name  : euclidean_cluster
@@ -1375,7 +1334,9 @@ params :
     msg   : ConfigCarKf
     no_save_vars : [ camera_id ]
     vars  :
-    - include_param_vars : car_kf
+    - include_param_vars : kf
+      overwrite :
+        topic       : /config/car_kf
 
     - name     : car
       desc     : car desc sample
@@ -1457,17 +1418,19 @@ params :
         delim       : ':='
         only_enable : True
 
-    # for [car] link
-    - include_param_vars : car_kf
-      link : car
-      topic: /config/car_kf
+    - include_param_vars : kf
+      overwrite :
+        link        : car
+        topic       : /config/car_kf
+        name_prefix : car_
 
-    # for [pedestrian] link
-    - include_param_vars : pedestrian_kf
-      link : pedestrian
-      topic: /config/pedestrian_kf
+    - include_param_vars : kf
+      overwrite :
+        link        : pedestrian
+        topic       : /config/pedestrian_kf
+        name_prefix : pedestrian_
 
-  - name  : car_kf
+  - name  : kf
     vars  :
     - name  : initial_lifespan
       desc  : initial_lifespan desc sample
@@ -1475,101 +1438,50 @@ params :
       min   : 1
       max   : 100
       v     : 4
+      in_msg: initial_lifespan
     - name  : default_lifespan
       desc  : default_lifespan desc sample
       label : Default Lifespan
       min   : 1
       max   : 100
       v     : 8
+      in_msg: default_lifespan
     - name  : noise_covariance
       desc  : noise_covariance desc sample
       label : Noise Covariance
       min   : 1
       max   : 1000
       v     : 1.0
+      in_msg: noise_covariance
     - name  : measurement_noise_covariance
       desc  : measurement_noise_covariance desc sample
       label : Measurement Noise Covariance
       min   : 1
       max   : 1000
       v     : 25.0
+      in_msg: measurement_noise_covariance
     - name  : error_estimate_covariance
       desc  : error_estimate_covariance desc sample
       label : Error estimate covariance
       min   : 1
       max   : 10000000
       v     : 1000000.0
+      in_msg: error_estimate_covariance
     - name  : percentage_of_overlapping
       desc  : percentage_of_overlapping desc sample
       label : Percentage of Overlapping
       min   : 0
       max   : 100
       v     : 0.0
+      in_msg: percentage_of_overlapping
     - name  : orb_features
       desc  : orb_features desc sample
       label : Number of ORB features
       min   : 500
       max   : 5000
       v     : 2000
-    - name  : use_orb
-      desc  : use_orb desc sample
-      label : Use ORB Matching?
-      min   : 0
-      max   : 1
-      v     : 0
-
-  - name  : pedestrian_kf
-    vars  :
-    - name  : pedestrian_initial_lifespan
-      desc  : initial_lifespan desc sample
-      label : Initial Lifespan
-      min   : 1
-      max   : 100
-      v     : 4
-      in_msg: initial_lifespan
-    - name  : pedestrian_default_lifespan
-      desc  : default_lifespan desc sample
-      label : Default Lifespan
-      min   : 1
-      max   : 100
-      v     : 8
-      in_msg: default_lifespan
-    - name  : pedestrian_noise_covariance
-      desc  : noise_covariance desc sample
-      label : Noise Covariance
-      min   : 1
-      max   : 1000
-      v     : 1.0
-      in_msg: noise_covariance
-    - name  : pedestrian_measurement_noise_covariance
-      desc  : measurement_noise_covariance desc sample
-      label : Measurement Noise Covariance
-      min   : 1
-      max   : 1000
-      v     : 25.0
-      in_msg: measurement_noise_covariance
-    - name  : pedestrian_error_estimate_covariance
-      desc  : error_estimate_covariance desc sample
-      label : Error estimate covariance
-      min   : 1
-      max   : 10000000
-      v     : 1000000.0
-      in_msg: error_estimate_covariance
-    - name  : pedestrian_percentage_of_overlapping
-      desc  : percentage_of_overlapping desc sample
-      label : Percentage of Overlapping
-      min   : 0
-      max   : 100
-      v     : 0.0
-      in_msg: percentage_of_overlapping
-    - name  : pedestrian_orb_features
-      desc  : orb_features desc sample
-      label : Number of ORB features
-      min   : 500
-      max   : 5000
-      v     : 2000
       in_msg: orb_features
-    - name  : pedestrian_use_orb
+    - name  : use_orb
       desc  : use_orb desc sample
       label : Use ORB Matching?
       min   : 0
@@ -1923,94 +1835,51 @@ params :
         delim       : ':='
         only_enable : True
 
-    # for [car] link
+    - include_param_vars : fusion
+      overwrite :
+        link        : car
+        topic       : /config/car_fusion
+        name_prefix : car_
+
+    - include_param_vars : fusion
+      overwrite :
+        link        : pedestrian
+        topic       : /config/pedestrian_fusion
+        name_prefix : pedestrian_
+
+  - name : fusion
+    vars :
     - name  : min_low_height
       desc  : min_low_height desc sample
       label : Minimum Height(Lower Bound)
       min   : -2
       max   : 0
       v     : -1.5
-      link  : car
-      topic : /config/car_fusion
+      in_msg: min_low_height
     - name  : max_low_height
       desc  : max_low_height desc sample
       label : Minimum Height(Upper Bound)
       min   : -2
       max   : 0
       v     : -1.0
-      link  : car
-      topic : /config/car_fusion
     - name  : max_height
       desc  : max_height desc sample
       label : Maximum Height
       min   : 0
       max   : 10
       v     : 2.0
-      link  : car
-      topic : /config/car_fusion
     - name  : min_points
       desc  : min_points desc sample
       label : Min Points in Box
       min   : 1
       max   : 100
       v     : 2
-      link  : car
-      topic : /config/car_fusion
     - name  : dispersion
       desc  : dispersion desc sample
       label : Coefficient of Variation
       min   : 0.0
       max   : 5.0
       v     : 1.0
-      link  : car
-      topic : /config/car_fusion
-
-    # for [pedestrian] link
-    - name  : pedestrian_min_low_height
-      desc  : min_low_height desc sample
-      label : Minimum Height(Lower Bound)
-      min   : -2
-      max   : 0
-      v     : -1.5
-      link  : pedestrian
-      topic : /config/pedestrian_fusion
-      in_msg: min_low_height
-    - name  : pedestrian_max_low_height
-      desc  : max_low_height desc sample
-      label : Minimum Height(Upper Bound)
-      min   : -2
-      max   : 0
-      v     : -1.0
-      link  : pedestrian
-      topic : /config/pedestrian_fusion
-      in_msg: max_low_height
-    - name  : pedestrian_max_height
-      desc  : max_height desc sample
-      label : Maximum Height
-      min   : 0
-      max   : 10
-      v     : 2.0
-      link  : pedestrian
-      topic : /config/pedestrian_fusion
-      in_msg: max_height
-    - name  : pedestrian_min_points
-      desc  : min_points desc sample
-      label : Min Points in Box
-      min   : 1
-      max   : 100
-      v     : 2
-      link  : pedestrian
-      topic : /config/pedestrian_fusion
-      in_msg: min_points
-    - name  : pedestrian_dispersion
-      desc  : dispersion desc sample
-      label : Coefficient of Variation
-      min   : 0.0
-      max   : 5.0
-      v     : 1.0
-      link  : pedestrian
-      topic : /config/pedestrian_fusion
-      in_msg: dispersion
 
   - name  : rcnn
     topic : /config/rcnn
