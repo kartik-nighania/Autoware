@@ -1788,7 +1788,7 @@ class MyFrame(rtmgr.MyFrame):
 						if link:
 							ivar['link'] = link
 				idx = vars.index(var)
-				vars[idx:idx+1] = ins_vars
+				vars[idx:idx+1] = ivars
 		for prm in params:
 			if 'topics' not in prm and 'topic' in prm and 'msg' in prm:
 				prm['topics'] = [ { 'topic':prm.get('topic'), 'msg':prm.get('msg') } ]
