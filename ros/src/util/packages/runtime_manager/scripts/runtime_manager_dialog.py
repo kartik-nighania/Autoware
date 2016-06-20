@@ -1770,6 +1770,25 @@ class MyFrame(rtmgr.MyFrame):
 		self.OnHyperlinked_obj(event.GetEventObject())
 
 	def add_params(self, params):
+		k = 'include_param_vars'
+		for prm in params:
+			vars = prm.get('vars', [])
+			for var in vars:
+				inm = var.get(k)
+				if inm is None:
+					continue
+				ivars = next( (iprm.get('vars', []) for iprm in params if iprm.get('name') == inm), [])
+				topic = var.get('topic')
+				link = var.get('link')
+				if topic or link:
+					ivars = [ ivar.copy() for ivar in ivars ]
+					for ivar in ivars:
+						if topic:
+							ivar['topic'] = topic
+						if link:
+							ivar['link'] = link
+				idx = vars.index(var)
+				vars[idx:idx+1] = ins_vars
 		for prm in params:
 			if 'topics' not in prm and 'topic' in prm and 'msg' in prm:
 				prm['topics'] = [ { 'topic':prm.get('topic'), 'msg':prm.get('msg') } ]
