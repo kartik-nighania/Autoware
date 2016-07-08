@@ -748,6 +748,7 @@ class MyFrame(rtmgr.MyFrame):
 		(pdic, gdic, prm) = self.obj_to_pdic_gdic_prm(obj)
 		if pdic is None or prm is None:
 			return
+		gdic['curr_link'] = obj.GetLabel() if hasattr(obj, 'GetLabel') else None
 		dic_list_push(gdic, 'dialog_type', 'config')
 		klass_dlg = globals().get(gdic_dialog_name_get(gdic), MyDialogParam)
 		dlg = klass_dlg(self, pdic=pdic, gdic=gdic, prm=prm)
@@ -765,6 +766,7 @@ class MyFrame(rtmgr.MyFrame):
 				var = self.get_var(prm, 'camera_id', {})
 				var['choices'] = ids
 
+				gdic['curr_link'] = 'sel_cam'
 				dic_list_push(gdic, 'dialog_type', 'sel_cam')
 				klass_dlg = globals().get(gdic_dialog_name_get(gdic), MyDialogParam)
 				dlg = klass_dlg(self, pdic=pdic, gdic=gdic, prm=prm)
@@ -1164,6 +1166,7 @@ class MyFrame(rtmgr.MyFrame):
 		name = dic['name']
 		pdic = self.load_dic_pdic_setup(name, dic)
 		gdic = self.gdic_get_1st(dic)
+		def_link = dic_getset(gdic, 'def_link', '[config]')
 		prm = self.get_param(dic.get('param'))
 		self.add_cfg_info(cfg_obj, obj, name, pdic, gdic, True, prm)
 		return hszr
@@ -2035,8 +2038,12 @@ class MyFrame(rtmgr.MyFrame):
 				add_objs = []
 				self.new_link(item, name, pdic, self.sys_gdic, pnl, 'sys', 'sys', add_objs)
 				gdic = self.gdic_get_1st(items)
+				def_link = dic_getset(gdic, 'def_link', 'app')
+				prm = self.get_param(items.get('param'))
 				if 'param' in items:
-					self.new_link(item, name, pdic, gdic, pnl, 'app', items.get('param'), add_objs)
+					for link in dic_getset(gdic, 'links', [ def_link ]):
+						if next( (var for var in prm.get('vars', []) if var.get('link', def_link) == link), None):
+							self.new_link(item, name, pdic, gdic, pnl, link, items.get('param'), add_objs)
 				else:
 					self.add_cfg_info(item, item, name, None, gdic, False, None)
 				szr = sizer_wrap(add_objs, wx.HORIZONTAL, parent=pnl)
@@ -2373,7 +2380,13 @@ class ParamPanel(wx.Panel):
 			var_lst = lambda name, vars : [ var for var in vars if var.get('name') == name ]
 			vars = reduce( lambda lst, name : lst + var_lst(name, vars), self.gdic.get('show_order'), [] )
 
+		curr_link = self.gdic.get('curr_link')
+		def_link = self.gdic.get('def_link')
+
 		for var in vars:
+			if var.get('link', def_link) != curr_link:
+				continue
+
 			name = var.get('name')
 
 			if not gdic_dialog_type_chk(self.gdic, name):
@@ -2696,7 +2709,8 @@ class MyDialogParam(rtmgr.MyDialogParam):
 		self.panel = ParamPanel(parent, frame=frame, pdic=pdic, gdic=gdic, prm=prm)
 		szr = sizer_wrap((self.panel,), wx.VERTICAL, 1, wx.EXPAND, 0, parent)
 
-		self.SetTitle(prm.get('name', ''))
+		title = gdic.get('links_info', {}).get(gdic.get('curr_link'), {}).get('title', prm.get('name', ''))
+		self.SetTitle(title)
 		(w,h) = self.GetSize()
 		(w2,_) = szr.GetMinSize()
 		w2 += 20
@@ -2733,7 +2747,8 @@ class MyDialogDpm(rtmgr.MyDialogDpm):
 		self.panel = ParamPanel(parent, frame=frame, pdic=pdic, gdic=gdic, prm=prm)
 		szr = sizer_wrap((self.panel,), wx.VERTICAL, 1, wx.EXPAND, 0, parent)
 
-		self.SetTitle(prm.get('name', ''))
+		title = gdic.get('links_info', {}).get(gdic.get('curr_link'), {}).get('title', prm.get('name', ''))
+		self.SetTitle(title)
 		(w,h) = self.GetSize()
 		(w2,_) = szr.GetMinSize()
 		w2 += 20
@@ -2777,7 +2792,9 @@ class MyDialogCarPedestrian(rtmgr.MyDialogCarPedestrian):
 		frame = self.GetParent()
 		self.frame = frame
 
-		self.SetTitle(prm.get('name', ''))
+		gdic = self.gdic
+		title = gdic.get('links_info', {}).get(gdic.get('curr_link'), {}).get('title', prm.get('name', ''))
+		self.SetTitle(title)
 
 		fix_link_color(self.hyperlink_car)
 		fix_link_color(self.hyperlink_pedestrian)
