@@ -510,6 +510,8 @@ sys_gui:
 
 params :
   - name  : sys
+    def_adj : dynamic
+    #def_adj : always
     vars  :
     - name     : cpu_chks
       desc     : cpu_chks desc sample
@@ -1712,6 +1714,7 @@ params :
       max       : 200
       v         : 40.0
       rosparam  : /waypoint_clicker/velocity
+      adjust    : static
     - name      : output_file
       desc      : output_file desc sample
       label     : Output File
@@ -1719,6 +1722,7 @@ params :
       path_type : save
       v         : /tmp/lane_waypoint.csv
       rosparam  : /waypoint_clicker/output_file
+      adjust    : static
         
   - name  : waypoint_loader
     vars  :
