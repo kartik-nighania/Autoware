@@ -766,7 +766,7 @@ class MyFrame(rtmgr.MyFrame):
 				var = self.get_var(prm, 'camera_id', {})
 				var['choices'] = ids
 
-				gdic['curr_link'] = 'sel_cam'
+				gdic['curr_link'] = 'app'
 				dic_list_push(gdic, 'dialog_type', 'sel_cam')
 				klass_dlg = globals().get(gdic_dialog_name_get(gdic), MyDialogParam)
 				dlg = klass_dlg(self, pdic=pdic, gdic=gdic, prm=prm)
@@ -778,6 +778,7 @@ class MyFrame(rtmgr.MyFrame):
 				pdic['camera_id'] = ''
 
 		if 'open_dialog' in gdic.get('flags', []) and msg_box:
+			gdic['curr_link'] = 'app'
 			dic_list_push(gdic, 'dialog_type', 'open')
 			klass_dlg = globals().get(gdic_dialog_name_get(gdic), MyDialogParam)
 			dlg = klass_dlg(self, pdic=pdic, gdic=gdic, prm=prm)
