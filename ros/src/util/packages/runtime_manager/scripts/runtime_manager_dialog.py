@@ -101,7 +101,7 @@ PROC_MANAGER_SOCK="/tmp/autoware_proc_manager"
 class MyFrame(rtmgr.MyFrame):
 	def __init__(self, *args, **kwds):
 		rtmgr.MyFrame.__init__(self, *args, **kwds)
-		self.all_procs = []
+		self.all_procs = {}
 		self.all_procs_nodes = {}
 		self.all_cmd_dics = []
 		self.load_dic = self.load_yaml('param.yaml', def_ret={})
@@ -1042,7 +1042,7 @@ class MyFrame(rtmgr.MyFrame):
 		if 'node_name' in var:
 			return var.get('node_name')
 
-                subprocess.call('echo y | rosnode cleanup', shell=True)
+		subprocess.call('echo y | rosnode cleanup', shell=True)
 		cmd = "rosnode list | xargs rosnode info | sed -n -e 's/^Node \\[\\(.*\\)\\]/\\1/p' -e 's/^Pid: \\(.*\\)/\\1/p'"
 		lst = subprocess.check_output(cmd, shell=True).strip().split()
 		names = lst[::2]
@@ -2217,7 +2217,7 @@ class MyFrame(rtmgr.MyFrame):
 			self.stat_label_off(obj)
 
 	def kill_all(self):
-		all = self.all_procs[:] # copy
+		all = self.all_procs.keys()
 		for proc in all:
 			self.kill_proc(proc)
 
@@ -2273,7 +2273,7 @@ class MyFrame(rtmgr.MyFrame):
 				err = subprocess.PIPE
 
 			proc = psutil.Popen(args, stdin=subprocess.PIPE, stdout=out, stderr=err)
-			self.all_procs.append(proc)
+			self.all_procs[ proc ] = {}
 			self.all_procs_nodes[ proc ] = self.nodes_dic.get(obj, [])
 
 			if f == self.log_th:
@@ -2289,7 +2289,9 @@ class MyFrame(rtmgr.MyFrame):
 			terminate(proc, sigint)
 			proc.wait()
 			if proc in self.all_procs:
-				self.all_procs.remove(proc)
+				for f in self.all_procs.get(proc, {}).get('fini', []):
+					f[0]( *f[1:] )
+				del self.all_procs[ proc ]
 				self.all_procs_nodes.pop(proc, None)
 			proc = None
 
