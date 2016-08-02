@@ -1904,3 +1904,7 @@ params :
       v     : ''
       dynamic_reconfig : image_file
       #node_name : fake_camera
+    - name  : dynamic_fps
+      label : dynamic_fps
+      v     : 30
+      dynamic_reconfig : fps
