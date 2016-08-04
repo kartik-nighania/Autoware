@@ -2995,6 +2995,9 @@ class MyDialogNdtMapping(rtmgr.MyDialogNdtMapping):
 		self.klass_msg = ConfigNdtMappingOutput
 		self.pub = rospy.Publisher('/config/ndt_mapping_output', self.klass_msg, queue_size=10)
 
+		d = frame.cfg_dic( {'pdic':self.pdic, 'gdic':self.gdic, 'param':self.prm} )
+		self.name = d.get('name', 'ndt_mapping')
+
 	def update_filename(self):
 		tc = self.text_ctrl_path
 		path = tc.GetValue()
@@ -3015,12 +3018,23 @@ class MyDialogNdtMapping(rtmgr.MyDialogNdtMapping):
 		tc.Enable(v)
 
 	def OnPcdOutput(self, event):
+		filename = self.text_ctrl_path.GetValue()
 		tc = self.text_ctrl_filter_resolution
 		v = tc.GetValue() if self.radio_btn_filter_resolution.GetValue() else '0.0'
-		msg = self.klass_msg()
-		msg.filename = self.text_ctrl_path.GetValue()
-		msg.filter_res = str_to_float(v)
-		self.pub.publish(msg)
+		filter_res = str_to_float(v)
+		
+		if self.name == 'ndt_mapping':
+			node_name = '/' + self.name
+			key = '/'.join( [ node_name, 'pcd_output_cnt' ] )
+			cnt = rospy.get_param(key, 0)
+			dic = { 'pcd_output_cnt': cnt+1, 'filename':filename, 'filter_res':filter_res }
+			client = dynamic_reconfigure.client.Client(node_name)
+			client.update_configuration(dic)
+		else:
+			msg = self.klass_msg()
+			msg.filename = filename
+			msg.filter_res = filter_res
+			self.pub.publish(msg)
 		
 	def OnOk(self, event):
 		self.panel.detach_func()

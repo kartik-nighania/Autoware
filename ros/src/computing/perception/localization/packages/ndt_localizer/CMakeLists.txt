@@ -22,6 +22,7 @@ find_package(catkin REQUIRED COMPONENTS
   velodyne_pointcloud
   message_generation
   ${FAST_PCL_PACKAGES}
+  dynamic_reconfigure
 )
 
 add_message_files(FILES ndt_stat.msg)
@@ -29,6 +30,10 @@ add_message_files(FILES ndt_stat.msg)
 generate_messages(
   DEPENDENCIES
   std_msgs
+)
+
+generate_dynamic_reconfigure_options(
+  cfg/NdtMapping.cfg
 )
 
 ###################################

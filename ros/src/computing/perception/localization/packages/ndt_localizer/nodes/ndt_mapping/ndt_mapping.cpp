@@ -64,8 +64,8 @@
 #include <pcl/filters/voxel_grid.h>
 #endif
 
-#include <runtime_manager/ConfigNdtMapping.h>
-#include <runtime_manager/ConfigNdtMappingOutput.h>
+#include <dynamic_reconfigure/server.h>
+#include <ndt_localizer/NdtMappingConfig.h>
 
 struct pose {
     double x;
@@ -118,25 +118,9 @@ static bool _use_openmp = false;
 
 static double fitness_score;
 
-static void param_callback(const runtime_manager::ConfigNdtMapping::ConstPtr& input)
+static void output(std::string filename, double filter_res)
 {
-  ndt_res = input->resolution;
-  step_size = input->step_size;
-  trans_eps = input->trans_eps;
-  voxel_leaf_size = input->leaf_size;
-
-  std::cout << "param_callback" << std::endl;
-  std::cout << "ndt_res: " << ndt_res << std::endl;
-  std::cout << "step_size: " << step_size << std::endl;
-  std::cout << "trans_eps: " << trans_eps << std::endl;
-  std::cout << "voxel_leaf_size: " << voxel_leaf_size << std::endl;
-}
-
-static void output_callback(const runtime_manager::ConfigNdtMappingOutput::ConstPtr& input)
-{
-  double filter_res = input->filter_res;
-  std::string filename = input->filename;
-  std::cout << "output_callback" << std::endl;
+  std::cout << "output" << std::endl;
   std::cout << "filter_res: " << filter_res << std::endl;
   std::cout << "filename: " << filename << std::endl;
 
@@ -170,6 +154,55 @@ static void output_callback(const runtime_manager::ConfigNdtMappingOutput::Const
     pcl::io::savePCDFileASCII(filename, *map_filtered);
     std::cout << "Saved " << map_filtered->points.size() << " data points to " << filename << "." << std::endl;
   }    
+}
+
+static bool is_1st(uint32_t level)
+{
+  return level == 0xffffffff;
+}
+
+static uint32_t get_level(ndt_localizer::NdtMappingConfig &config, std::string name)
+{
+  const std::vector<ndt_localizer::NdtMappingConfig::AbstractParamDescriptionConstPtr> &
+    params = config.__getParamDescriptions__();
+
+  for (std::vector<ndt_localizer::NdtMappingConfig::AbstractParamDescriptionConstPtr>::const_iterator
+	 _i = params.begin(); _i != params.end(); ++_i) {
+    if (name == (*_i)->name) {
+      return (*_i)->level;
+    }
+  }
+  return 0;
+}
+
+static bool is_update(ndt_localizer::NdtMappingConfig &config, uint32_t level, std::string name)
+{
+  uint32_t name_level = get_level(config, name);
+  return name_level ? (level & name_level) != 0 : false;
+}
+
+static void ndt_callback(ndt_localizer::NdtMappingConfig &config, uint32_t level)
+{
+  if (is_update(config, level, "resolution")) {
+    ndt_res = config.resolution;
+    std::cout << "ndt_res: " << ndt_res << std::endl;
+  }
+  if (is_update(config, level, "step_size")) {
+    step_size = config.step_size;
+    std::cout << "step_size: " << step_size << std::endl;
+  }
+  if (is_update(config, level, "trans_eps")) {
+    trans_eps = config.trans_eps;
+    std::cout << "trans_eps: " << trans_eps << std::endl;
+  }
+  if (is_update(config, level, "leaf_size")) {
+    voxel_leaf_size = config.leaf_size;
+    std::cout << "voxel_leaf_size: " << voxel_leaf_size << std::endl;
+  }
+
+  if (!is_1st(level) && is_update(config, level, "pcd_output_cnt")) {
+    output(config.filename, config.filter_res);
+  }
 }
 
 static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
@@ -471,8 +504,11 @@ int main(int argc, char **argv)
     ndt_map_pub = nh.advertise<sensor_msgs::PointCloud2>("/ndt_map", 1000);
     current_pose_pub = nh.advertise<geometry_msgs::PoseStamped>("/current_pose", 1000);
 
-    ros::Subscriber param_sub = nh.subscribe("config/ndt_mapping", 10, param_callback);
-    ros::Subscriber output_sub = nh.subscribe("config/ndt_mapping_output", 10, output_callback);
+    dynamic_reconfigure::Server<ndt_localizer::NdtMappingConfig> server;
+    dynamic_reconfigure::Server<ndt_localizer::NdtMappingConfig>::CallbackType f;
+    f = boost::bind(&ndt_callback, _1, _2);
+    server.setCallback(f);
+
     ros::Subscriber points_sub = nh.subscribe("points_raw", 100000, points_callback);
 
     ros::spin();
