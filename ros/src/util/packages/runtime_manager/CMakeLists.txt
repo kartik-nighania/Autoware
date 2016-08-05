@@ -15,8 +15,6 @@ add_message_files(
   ConfigCarDpm.msg
   ConfigPedestrianDpm.msg
   ConfigNdt.msg
-  ConfigNdtMapping.msg
-  ConfigNdtMappingOutput.msg
   ConfigICP.msg
   ConfigVoxelGridFilter.msg
   ConfigRingFilter.msg

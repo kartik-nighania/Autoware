@@ -61,8 +61,6 @@ from runtime_manager.msg import ConfigRcnn
 from runtime_manager.msg import ConfigCarDpm
 from runtime_manager.msg import ConfigPedestrianDpm
 from runtime_manager.msg import ConfigNdt
-from runtime_manager.msg import ConfigNdtMapping
-from runtime_manager.msg import ConfigNdtMappingOutput
 from runtime_manager.msg import ConfigICP
 from runtime_manager.msg import ConfigVoxelGridFilter
 from runtime_manager.msg import ConfigRingFilter
@@ -2992,8 +2990,6 @@ class MyDialogNdtMapping(rtmgr.MyDialogNdtMapping):
 		sizer_wrap((self.panel,), wx.VERTICAL, 1, wx.EXPAND, 0, parent)
 
 		self.update_filename()
-		self.klass_msg = ConfigNdtMappingOutput
-		self.pub = rospy.Publisher('/config/ndt_mapping_output', self.klass_msg, queue_size=10)
 
 		d = frame.cfg_dic( {'pdic':self.pdic, 'gdic':self.gdic, 'param':self.prm} )
 		self.name = d.get('name', 'ndt_mapping')
@@ -3023,18 +3019,12 @@ class MyDialogNdtMapping(rtmgr.MyDialogNdtMapping):
 		v = tc.GetValue() if self.radio_btn_filter_resolution.GetValue() else '0.0'
 		filter_res = str_to_float(v)
 		
-		if self.name == 'ndt_mapping':
-			node_name = '/' + self.name
-			key = '/'.join( [ node_name, 'pcd_output_cnt' ] )
-			cnt = rospy.get_param(key, 0)
-			dic = { 'pcd_output_cnt': cnt+1, 'filename':filename, 'filter_res':filter_res }
-			client = dynamic_reconfigure.client.Client(node_name)
-			client.update_configuration(dic)
-		else:
-			msg = self.klass_msg()
-			msg.filename = filename
-			msg.filter_res = filter_res
-			self.pub.publish(msg)
+		node_name = '/' + self.name
+		key = '/'.join( [ node_name, 'pcd_output_cnt' ] )
+		cnt = rospy.get_param(key, 0)
+		dic = { 'pcd_output_cnt': cnt+1, 'filename':filename, 'filter_res':filter_res }
+		client = dynamic_reconfigure.client.Client(node_name)
+		client.update_configuration(dic)
 		
 	def OnOk(self, event):
 		self.panel.detach_func()

@@ -29,7 +29,7 @@ subs :
           dialog : MyDialogNdtMapping
       - name : lazy_ndt_mapping
         cmd  : roslaunch ndt_localizer lazy_ndt_mapping.launch
-        param: ndt_mapping
+        param: lazy_ndt_mapping
         gui  :
           dialog : MyDialogNdtMapping
       - name : ndt_matching
@@ -1633,10 +1633,7 @@ params :
         dash        : ''
         delim       : ':='
         
-  - name  : ndt_mapping
-    topic : /config/ndt_mapping
-    msg   : ConfigNdtMapping
-    flags : [ no_init_update ]
+  - name  : ndt_mapping_dynamic
     vars  :
     - name      : resolution
       desc      : resolution desc sample
@@ -1645,7 +1642,6 @@ params :
       max       : 10.0
       v         : 1.0
       dynamic_reconfig : resolution
-      node_name : /ndt_mapping
     - name      : step_size
       desc      : step_size desc sample
       label     : Step Size
@@ -1653,7 +1649,6 @@ params :
       max       : 1.0
       v         : 0.1
       dynamic_reconfig : step_size
-      node_name : /ndt_mapping
     - name      : trans_eps
       desc      : trans_eps desc sample
       label     : Trans EPS
@@ -1661,7 +1656,6 @@ params :
       max       : 0.1
       v         : 0.01
       dynamic_reconfig : trans_eps
-      node_name : /ndt_mapping
     - name      : leaf_size
       desc      : leaf_size desc sample
       label     : Leaf Size
@@ -1669,7 +1663,28 @@ params :
       max       : 10.0
       v         : 1.0
       dynamic_reconfig : leaf_size
-      node_name : /ndt_mapping
+
+  - name  : ndt_mapping
+    flags : [ no_init_update ]
+    vars  :
+    - include_param_vars : ndt_mapping_dynamic
+      overwrite_all :
+        node_name : /ndt_mapping
+    - name      : use_openmp
+      desc      : use_openmp desc sample
+      label     : Use OpenMP
+      kind      : checkbox
+      v         : False
+      cmd_param :
+        dash      : ''
+        delim     : ':='
+
+  - name  : lazy_ndt_mapping
+    flags : [ no_init_update ]
+    vars  :
+    - include_param_vars : ndt_mapping_dynamic
+      overwrite_all :
+        node_name : /lazy_ndt_mapping
     - name      : use_openmp
       desc      : use_openmp desc sample
       label     : Use OpenMP
